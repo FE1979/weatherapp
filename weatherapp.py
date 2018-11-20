@@ -39,20 +39,18 @@ print(f"Температура {ACCU_Data['Temperature']:.0f} {unescape('&deg')}
      f"відчувається як {ACCU_Data['RealFeel']} {unescape('&deg')}C,"
      f" на небі - {ACCU_Data['Condition']}\n")
 
-a = input('RP5')
-
 """ Load weather info from RP5 """
 
 RP5_URL = "http://rp5.ua/%D0%9F%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0_%D0%B2_%D0%9A%D0%B8%D1%94%D0%B2%D1%96"
 RP5_HEAD = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:63.0) Gecko/201'}
 RP5_REQUEST = Request(RP5_URL, headers = RP5_HEAD)
 RP5_PAGE = urlopen(RP5_REQUEST).read()
-RP5_PAGE = str(RP5_PAGE)
+RP5_PAGE = str(RP5_PAGE, encoding = 'utf-8')
 
 RP5_Condition_tags = {'1': "ftab_1_content",
-                        '2': "<b>"}
+                        '2': "tooltip(this, \'<b>"}
 RP5_TEMP_tag = '\"t_0\" style=\"display: block;\">'
-RP5_RealFeel_tag = ''
+RP5_RealFeel_tag = "f_temperature"
 RP5_Data = {}
 
 """Temperature"""
@@ -62,18 +60,22 @@ RP5_temp = RP5_PAGE[start + len(RP5_TEMP_tag):end-1]
 RP5_Data['Temperature'] = RP5_temp
 
 """Condition"""
-start = RP5_PAGE.find(RP5_Condition_tags['1'])
+start = RP5_PAGE.find(RP5_Condition_tags['1']) #Search in 1 day forecast tab
+start = RP5_PAGE.find('</tr', start)
+start = RP5_PAGE.find('</tr', start+5) #skip two rows in the table
 start = RP5_PAGE.find(RP5_Condition_tags['2'], start)
 end = RP5_PAGE.find("</b>", start)
-RP5_Data['Condition'] = RP5_PAGE[start + len(RP5_Condition_tags['2']):end-1]
+RP5_Data['Condition'] = RP5_PAGE[start + len(RP5_Condition_tags['2']):end]
 
 """RealFeel"""
-start = RP5_PAGE.find("f_temperature", end)
+start = RP5_PAGE.find(RP5_RealFeel_tag, end)
 start = RP5_PAGE.find("<div class=\"t_0\">", start)
-end = RP5_PAGE.find("</div>", start)
-RP5_Data['RealFeel'] = RP5_PAGE[start + len("<div class=\"t_0\">"):end-1]
+end = RP5_PAGE.find("</b>", start)
+RP5_Data['RealFeel'] = RP5_PAGE[start + len("<div class=\"t_0\">"):end]
 
 print('\nПоточна погода за даними RP5:\n')
-print(f"Температура {unescape(RP5_Data['Temperature'])}C, відчувається як {RP5_Data['RealFeel']}, на небі - {RP5_Data['Condition']}\n")
+print(f"Температура {unescape(RP5_Data['Temperature'])}C,"
+        f" відчувається як {RP5_Data['RealFeel']} {unescape('&deg')}C,"
+        f" на небі - {RP5_Data['Condition']}\n")
 
 #print(unescape(RP5_temp))
