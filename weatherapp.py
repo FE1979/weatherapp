@@ -78,4 +78,48 @@ print(f"Температура {unescape(RP5_Data['Temperature'])}C,"
         f" відчувається як {RP5_Data['RealFeel']} {unescape('&deg')}C,"
         f" на небі - {RP5_Data['Condition']}\n")
 
-#print(unescape(RP5_temp))
+""" Data from sinoptik"""
+SINOPTIK_URL = "https://ua.sinoptik.ua/%D0%BF%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0-%D0%BA%D0%B8%D1%97%D0%B2"
+SINOPTIK_HEAD = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:63.0) Gecko/201'}
+SINOPTIK_REQUEST = Request(SINOPTIK_URL, headers = SINOPTIK_HEAD)
+SINOPTIK_PAGE = urlopen(SINOPTIK_REQUEST).read()
+SINOPTIK_PAGE = str(SINOPTIK_PAGE, encoding = 'utf-8')
+
+SINOPTIK_open_tag = "<div class=\"wMain clearfix\">"
+SINOPTIK_close_tag = "<div class=\"wDescription clearfix\">"
+
+SINOPTIK_Condition_tags = {'1': "today-time", '2': "alt=\"", 'close_cond_tag': "\""}
+SINOPTIK_TEMP_tags = {'temp_open_tag': "today-temp\">",
+                        'temp_close_tag': "<"}
+
+SINOPTIK_RealFeel_tags = {"1": "<tr class=\"temperatureSens\">", "RF_open_tag": "cur\" >",
+                            "RF_close_tag": "<"}
+SINOPTIK_Data = {}
+start = SINOPTIK_PAGE.find(SINOPTIK_open_tag)
+end = SINOPTIK_PAGE.find(SINOPTIK_close_tag)
+SINOPTIK_scrap_page = SINOPTIK_PAGE[start:end]
+
+"""Condition"""
+start = SINOPTIK_scrap_page.find(SINOPTIK_Condition_tags['1'])
+start = (SINOPTIK_scrap_page.find(SINOPTIK_Condition_tags['2'], start) +
+                                    + len(SINOPTIK_Condition_tags['2']))
+end = SINOPTIK_scrap_page.find(SINOPTIK_Condition_tags['close_cond_tag'], start)
+SINOPTIK_Data['Condition'] = SINOPTIK_scrap_page[start : end]
+
+"""Temperature"""
+start = (SINOPTIK_scrap_page.find(SINOPTIK_TEMP_tags['temp_open_tag']) +
+                                    + len(SINOPTIK_TEMP_tags['temp_open_tag']))
+end = SINOPTIK_scrap_page.find(SINOPTIK_TEMP_tags['temp_close_tag'], start)
+SINOPTIK_Data['Temperature'] = SINOPTIK_scrap_page[start : end]
+
+"""RealFeel"""
+start = SINOPTIK_scrap_page.find(SINOPTIK_RealFeel_tags['1'])
+start = (SINOPTIK_scrap_page.find(SINOPTIK_RealFeel_tags['RF_open_tag'], start) +
+                                    + len(SINOPTIK_RealFeel_tags['RF_open_tag']))
+end = SINOPTIK_scrap_page.find(SINOPTIK_RealFeel_tags['RF_close_tag'], start)
+SINOPTIK_Data['RealFeel'] = SINOPTIK_scrap_page[start : end]
+
+print('\nПоточна погода за даними Sinoptik:\n')
+print(f"Температура {unescape(SINOPTIK_Data['Temperature'])},"
+        f" відчувається як {unescape(SINOPTIK_Data['RealFeel'])}C,"
+        f" на небі - {SINOPTIK_Data['Condition']}\n")
