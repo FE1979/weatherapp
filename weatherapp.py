@@ -92,10 +92,26 @@ def print_weather(weather_info, title):
     """
     Prints weather on a screen
     """
-    print(f"\nПоточна погода за даними {title}:\n")
-    print(f"Температура {weather_info['Temperature']} {unescape('&deg')}C,"
-         f" відчувається як {weather_info['RealFeel']} {unescape('&deg')}C,"
-         f" на небі - {weather_info['Condition']}\n")
+    def create_table(weather_info, title):
+        ROW_TITLES = ('Температура', 'Відчувається як', 'На небі')
+        first_column_len = len(max(ROW_TITLES, key = lambda item: len(item))) + 2
+        second_column_len = len(max(list(weather_info.values()), key = lambda item: len(item))) + 2
+        width = first_column_len + second_column_len + 1
+
+        print('+' + '-'*(width) + '+')
+        print('|' + title.center(width, ' ') + '|')
+        print('+' + '-'*(first_column_len) + '+' + '-'*(second_column_len) + '+')
+        print('| ' + ROW_TITLES[0].ljust(first_column_len - 1, ' '), end ="")
+        print('| ' + (weather_info["Temperature"] + f"{unescape('&deg')}C").ljust(second_column_len-1, ' ') + '|')
+        print('| ' + ROW_TITLES[1].ljust(first_column_len - 1, ' '), end ="")
+        print('| ' + (weather_info["RealFeel"] + f"{unescape('&deg')}C").ljust(second_column_len-1, ' ') + '|')
+        print('| ' + ROW_TITLES[2].ljust(first_column_len - 1, ' '), end ="")
+        print('| ' + weather_info["Condition"].ljust(second_column_len-1, ' ') + '|')
+        print('+' + '-'*(first_column_len) + '+' + '-'*(second_column_len) + '+')
+        pass
+
+    create_table(weather_info, title)
+
 
 def main(provider):
     weather_providers = {
