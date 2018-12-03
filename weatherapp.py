@@ -106,7 +106,7 @@ def print_weather(weather_info, title):
         print('+' + '-'*(first_column_len) + '+' + '-'*(second_column_len) + '+')
         pass
 
-    output_data = {'Температура': f"""{weather_info['Temperature']} {unescape('&deg')} C""",
+    output_data = {'Температура': f"""{weather_info['Temperature']} {unescape('&deg')}C""",
                     'Відчувається як': f"""{weather_info['RealFeel']} {unescape('&deg')}C""",
                     'На небі': weather_info['Condition']}
     create_table(output_data, title)
