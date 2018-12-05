@@ -4,6 +4,7 @@ Test project
 
 from urllib.request import urlopen, Request
 from html import escape, unescape
+from bs4 import BeautifulSoup
 
 def get_raw_page(URL):
     """
@@ -29,24 +30,39 @@ def get_data_by_tags(html_page, open_tag, close_tag = None, end_shift = 0):
 
     return html_string
 
-def get_accu_info(raw_page, TAGS):
+def get_accu_info(raw_page):
     """ Extracts weather info from ACCUWEATHER loaded page
     """
     weather_info = {}
 
-    """Condition"""
-    weather_info['Condition'] = get_data_by_tags(raw_page, TAGS['Condition_open_tag'],
-                                TAGS['Condition_close_tag'], 1)
+    soup = BeautifulSoup(raw_page, 'html.parser')
 
-    """Temperature"""
-    temp = int(get_data_by_tags(raw_page, TAGS['TEMP_open_tag'],
-                                TAGS['TEMP_close_tag'], 1))
-    weather_info['Temperature'] = str(int((temp - 32) * 5 / 9)) #convert to celsius
-    #weather_info['Temperature'] = {.0}.format(weather_info['Temperature'])
+    current_cond_div = soup.find('div', class_='bg bg-s s') #find block with curr condition
+    weather_info['Temperature'] = str(current_cond_div.find('span', class_='large-temp').string) #temperature and convert it to string type
+    weather_info['Condition'] = str(current_cond_div.find('span', class_='cond').string) #condition
+    RealFeel = str(current_cond_div.find('span', class_='realfeel').string) #RealFeel
+    weather_info['RealFeel'] = RealFeel[10:] #remove word 'RealFeel' from it
 
-    """RealFeel"""
-    weather_info['RealFeel'] = get_data_by_tags(raw_page, TAGS['RealFeel_open_tag'],
-                                TAGS['RealFeel_close_tag'], 3)
+    return weather_info
+
+def get_accu_hourly(raw_page):
+
+    weather_info = {}
+    soup = BeautifulSoup(raw_page, 'html.parser')
+
+    hourly_data = soup.find('div', class_='hourly-table overview-hourly') #find hourly forecast table
+    hourly_data = hourly_data.select('tbody tr span') #extract only <span> with data
+
+    i=0
+    hourly_temperature = []
+    while i<8: #move 8 times (8 hours forecast)
+        hourly_temperature.append(int(list(hourly_data)[i].string[:1]))
+        i += 1
+        pass
+    weather_info['Max'] = max(hourly_temperature)
+    weather_info['Min'] = min(hourly_temperature)
+    weather_info['Av'] = sum(hourly_temperature) / len(hourly_temperature)
+
     return weather_info
 
 def get_rp5_info(raw_page, TAGS):
@@ -155,7 +171,7 @@ def main(provider):
     raw_page = get_raw_page(URL) #load a page
 
     if provider == 'ACCU':
-        weather_info = get_accu_info(raw_page, TAGS) #extract data from a page
+        weather_info = get_accu_info(raw_page) #extract data from a page
         print_weather(weather_info, title) #print weather info on a screen
     elif provider == 'RP5':
         weather_info = get_rp5_info(raw_page, TAGS) #extract data from a page
