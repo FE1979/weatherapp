@@ -81,8 +81,8 @@ def get_rp5_info(raw_page):
     RF_text = RealFeel_block.find('span', class_='t_0').string #actual RF
     RF_text = RF_text[:len(RF_text) - 3] #remove space and Celsius sign
     weather_info['RealFeel'] = RF_text
-    """
-    Cond_block = soup.find('div', id='forecastTable_1') #take table with short hourly description
+
+    Cond_block = soup.find('table', id='forecastTable_1') #take table with short hourly description
     Cond_block = Cond_block.find_all('tr') #take all rows
     Cond_block = list(Cond_block)[2].find_all('td') #take all columns in 3rd row
     Cond_block = list(Cond_block)[1] #select 2nd col
@@ -90,11 +90,10 @@ def get_rp5_info(raw_page):
 
     start_tag = 'b&gt;'
     end_tag = '&lt'
-    start = Cond_text.find(start_tag) #extract from simple string
+    start = Cond_text.find(start_tag) + len(start_tag) #extract from simple string
     end = Cond_text.find(end_tag, start)
     weather_info['Condition'] = Cond_text[start:end]
-    """
-    weather_info['Condition'] = ""
+
     return weather_info
 
 def get_sinoptik_info(raw_page, TAGS):
