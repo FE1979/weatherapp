@@ -37,11 +37,12 @@ def get_accu_info(raw_page):
 
     soup = BeautifulSoup(raw_page, 'html.parser')
 
-    current_cond_div = soup.find('div', class_='bg bg-s s') #find block with curr condition
+    current_cond_div = soup.find('div', id='feed-tabs', class_='panel-list cityforecast') #find block with curr condition
     weather_info['Temperature'] = str(current_cond_div.find('span', class_='large-temp').string) #temperature and convert it to string type
+    weather_info['Temperature'] = weather_info['Temperature'][:-1] #remove grade sign
     weather_info['Condition'] = str(current_cond_div.find('span', class_='cond').string) #condition
     RealFeel = str(current_cond_div.find('span', class_='realfeel').string) #RealFeel
-    weather_info['RealFeel'] = RealFeel[10:] #remove word 'RealFeel' from it
+    weather_info['RealFeel'] = RealFeel[10:-1] #remove word 'RealFeel' from it and grade sign
 
     return weather_info
 
@@ -65,24 +66,35 @@ def get_accu_hourly(raw_page):
 
     return weather_info
 
-def get_rp5_info(raw_page, TAGS):
+def get_rp5_info(raw_page):
     """ Extracts data from RP5 loaded page
     """
     weather_info = {}
+    soup = BeautifulSoup(raw_page, 'lxml')
 
-    """Temperature"""
-    weather_info['Temperature'] = get_data_by_tags(raw_page, TAGS['TEMP_open_tag'], TAGS['TEMP_close_tag'], 7)
+    temperature_block = soup.find('div', id = 'ArchTemp') #part with Temperature
+    temperature_text = temperature_block.find('span', class_='t_0').string #Actual temperature
+    temperature_text = temperature_text[:len(temperature_text) - 3] #remove space and Celsius sign
+    weather_info['Temperature'] = temperature_text
 
-    """Condition"""
-    weather_info['Condition'] = get_data_by_tags(raw_page, TAGS['Condition_1'])
-    weather_info['Condition'] = get_data_by_tags(weather_info['Condition'], TAGS['Condition_row'])
-    weather_info['Condition'] = get_data_by_tags(weather_info['Condition'], TAGS['Condition_row'])
-    weather_info['Condition'] = get_data_by_tags(weather_info['Condition'], TAGS['Condition_2'], TAGS['Condition_close_tag'], )
+    RealFeel_block = soup.find('div', class_='ArchiveTempFeeling') #Looking for RF
+    RF_text = RealFeel_block.find('span', class_='t_0').string #actual RF
+    RF_text = RF_text[:len(RF_text) - 3] #remove space and Celsius sign
+    weather_info['RealFeel'] = RF_text
+    """
+    Cond_block = soup.find('div', id='forecastTable_1') #take table with short hourly description
+    Cond_block = Cond_block.find_all('tr') #take all rows
+    Cond_block = list(Cond_block)[2].find_all('td') #take all columns in 3rd row
+    Cond_block = list(Cond_block)[1] #select 2nd col
+    Cond_text = str(list(Cond_block.children)[1]) # and make it string
 
-    """RealFeel"""
-    weather_info['RealFeel'] = get_data_by_tags(raw_page, TAGS['RealFeel_1'])
-    weather_info['RealFeel'] = get_data_by_tags(weather_info['RealFeel'], TAGS['RealFeel_2'], TAGS['RealFeel_close_tag'])
-
+    start_tag = 'b&gt;'
+    end_tag = '&lt'
+    start = Cond_text.find(start_tag) #extract from simple string
+    end = Cond_text.find(end_tag, start)
+    weather_info['Condition'] = Cond_text[start:end]
+    """
+    weather_info['Condition'] = ""
     return weather_info
 
 def get_sinoptik_info(raw_page, TAGS):
@@ -174,7 +186,7 @@ def main(provider):
         weather_info = get_accu_info(raw_page) #extract data from a page
         print_weather(weather_info, title) #print weather info on a screen
     elif provider == 'RP5':
-        weather_info = get_rp5_info(raw_page, TAGS) #extract data from a page
+        weather_info = get_rp5_info(raw_page) #extract data from a page
         print_weather(weather_info, title) #print weather info on a screen
     elif provider == 'Sinoptik':
         weather_info = get_sinoptik_info(raw_page, TAGS) #extract data from a page
