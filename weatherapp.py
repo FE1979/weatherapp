@@ -57,7 +57,7 @@ def get_accu_hourly(raw_page):
     i=0
     hourly_temperature = []
     while i<8: #move 8 times (8 hours forecast)
-        hourly_temperature.append(int(list(hourly_data)[i].string[:1]))
+        hourly_temperature.append(int(list(hourly_data)[i].string[:-1]))
         i += 1
         pass
     weather_info['Max'] = max(hourly_temperature)
@@ -227,10 +227,9 @@ def main(provider):
     if provider == 'ACCU':
         weather_info = get_accu_info(raw_page) #extract data from a page
         print_weather(weather_info, title) #print weather info on a screen
-        """
         raw_page = get_raw_page(weather_providers[provider]['URL_hourly'])
         ACCU_hourly = get_accu_hourly(raw_page)
-        print(ACCU_hourly)"""
+        print(ACCU_hourly)
     elif provider == 'RP5':
         weather_info = get_rp5_info(raw_page) #extract data from a page
         print_weather(weather_info, title) #print weather info on a screen
