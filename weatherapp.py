@@ -117,7 +117,7 @@ def get_rp5_hourly(raw_page):
 
     return weather_info
 
-def get_sinoptik_info(raw_page, TAGS):
+def get_sinoptik_info(raw_page):
     """ Extracts data from Sinoptik loaded page
     """
     weather_info = {}
@@ -135,6 +135,25 @@ def get_sinoptik_info(raw_page, TAGS):
     curr_realfeel = curr_realfeel.find('tr', class_='temperatureSens')
     curr_realfeel = str(curr_realfeel.find('td', class_='p1').get_text())
     weather_info['RealFeel'] = curr_realfeel[:-1] #remove grade sign
+
+    return weather_info
+
+def get_sinoptik_hourly(raw_page):
+    weather_info = {}
+    table_data = []
+
+    soup = BeautifulSoup(raw_page, 'html.parser')
+    table = soup.find('table', class_='weatherDetails')
+    table = table.find('tr', class_='temperature')
+    table = table.find_all('td')
+
+    for item in list(table):
+        t = item.get_text()
+        table_data.append(int(t[:-1])) #remove grade sign
+
+    weather_info['Max'] = max(table_data)
+    weather_info['Min'] = min(table_data)
+    weather_info['Av'] = sum(table_data) / len(table_data)
 
     return weather_info
 
@@ -166,6 +185,7 @@ def main(provider):
     weather_providers = {
     'ACCU': {'Title': 'Accuweather',
             'URL': "https://www.accuweather.com/uk/ua/kyiv/324505/weather-forecast/324505",
+            'URL_hourly': "https://www.accuweather.com/uk/ua/kyiv/324505/hourly-weather-forecast/324505",
             'TAGS': {'Condition_open_tag': 'txt : \'',
                     'Condition_close_tag': ',',
                     'TEMP_open_tag': 'temp_f : \'',
@@ -207,12 +227,20 @@ def main(provider):
     if provider == 'ACCU':
         weather_info = get_accu_info(raw_page) #extract data from a page
         print_weather(weather_info, title) #print weather info on a screen
+        """
+        raw_page = get_raw_page(weather_providers[provider]['URL_hourly'])
+        ACCU_hourly = get_accu_hourly(raw_page)
+        print(ACCU_hourly)"""
     elif provider == 'RP5':
         weather_info = get_rp5_info(raw_page) #extract data from a page
         print_weather(weather_info, title) #print weather info on a screen
+        RP5_hourly = get_rp5_hourly(raw_page)
+        print(RP5_hourly)
     elif provider == 'Sinoptik':
-        weather_info = get_sinoptik_info(raw_page, TAGS) #extract data from a page
+        weather_info = get_sinoptik_info(raw_page) #extract data from a page
         print_weather(weather_info, title) #print weather info on a screen
+        Sinoptik_hourly = get_sinoptik_hourly(raw_page)
+        print(Sinoptik_hourly)
     else:
         pass
 
