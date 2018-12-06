@@ -160,29 +160,59 @@ def get_sinoptik_hourly(raw_page):
 
     return weather_info
 
-def print_weather(weather_info, title):
+def print_weather(output_data, title):
     """
     Prints weather on a screen
+    input data - list of two lists: headers and values
     """
     def create_table(table_data, title):
-        first_column_len = len(max(table_data.keys(), key = lambda item: len(item))) + 2
-        second_column_len = len(max(table_data.values(), key = lambda item: len(item))) + 2
+        first_column_len = len(max(table_data[0], key = lambda item: len(item))) + 2
+        second_column_len = len(max(table_data[1], key = lambda item: len(item))) + 2
         width = first_column_len + second_column_len + 1
+        counter = len(table_data[0])
+        i = 0
 
+        #print top of table with title
         print('+' + '-'*(width) + '+')
         print('|' + title.center(width, ' ') + '|')
         print('+' + '-'*(first_column_len) + '+' + '-'*(second_column_len) + '+')
-        for item in table_data:
-            print('| ' + item.ljust(first_column_len - 1, ' '), end ="")
-            print('| ' + table_data[item].ljust(second_column_len-1, ' ') + '|')
+
+        while i < counter: #print out headers and values
+            print('| ' + table_data[0][i].ljust(first_column_len - 1, ' '), end ="")
+            print('| ' + table_data[1][i].ljust(second_column_len-1, ' ') + '|')
+            i += 1
+            pass
+        #bottom line
         print('+' + '-'*(first_column_len) + '+' + '-'*(second_column_len) + '+')
         pass
 
-    output_data = {'Температура': f"""{weather_info['Temperature']} {unescape('&deg')}C""",
-                    'Відчувається як': f"""{weather_info['RealFeel']} {unescape('&deg')}C""",
-                    'На небі': weather_info['Condition']}
     create_table(output_data, title)
 
+def make_printable(weather_info):
+    """ Transform weather data to printable format
+        headers_dict - translation dictionary
+        temperature_heads - to insert Celsius sign if needed
+        print_order - to define which way weather_info will show
+    """
+    headers_dict = {'Temperature': 'Температура', 'RealFeel': 'Відчувається як',
+                    'Condition': 'На небі', 'Max': 'Максимальна', 'Min': 'Мінімальна',
+                    'Av': 'Середня', 'Num': 'Прогноз на, годин', 'Deg': f"{unescape('&deg')}C"}
+    temperature_heads = ['Temperature', 'RealFeel', 'Max', 'Min', 'Av']
+    print_order = ['Temperature', 'RealFeel', 'Condition', 'Num', 'Max', 'Min', 'Av']
+    output_data = [[],[]]
+
+    for item in print_order:
+        if item in weather_info.keys():
+            if item in temperature_heads: #if we need to show Celsius
+                output_data[0].append(headers_dict[item])
+                output_data[1].append(str(weather_info[item]) + ' ' + headers_dict['Deg'])
+            else:
+                output_data[0].append(headers_dict[item])
+                output_data[1].append(str(weather_info[item]))
+        else:
+            pass
+
+    return output_data
 
 def main(provider):
     weather_providers = {
@@ -201,26 +231,35 @@ def main(provider):
     title = weather_providers[provider]['Title']
     URL = ''
     URL = weather_providers[provider]['URL']
-    TAGS = weather_providers[provider]['TAGS']
 
     raw_page = get_raw_page(URL) #load a page
 
     if provider == 'ACCU':
         weather_info = get_accu_info(raw_page) #extract data from a page
-        print_weather(weather_info, title) #print weather info on a screen
-        raw_page = get_raw_page(weather_providers[provider]['URL_hourly'])
+        raw_page = get_raw_page(weather_providers[provider]['URL_hourly']) #load forecast
         ACCU_hourly = get_accu_hourly(raw_page)
-        print(ACCU_hourly)
+        weather_info.update(ACCU_hourly) #update with forecast
+
+        output_data = make_printable(weather_info) #create printable
+        print_weather(output_data, title) #print weather info on a screen
+
     elif provider == 'RP5':
         weather_info = get_rp5_info(raw_page) #extract data from a page
-        print_weather(weather_info, title) #print weather info on a screen
+
         RP5_hourly = get_rp5_hourly(raw_page)
-        print(RP5_hourly)
+        weather_info.update(RP5_hourly)
+
+        output_data = make_printable(weather_info)
+        print_weather(output_data, title)
+
     elif provider == 'Sinoptik':
         weather_info = get_sinoptik_info(raw_page) #extract data from a page
-        print_weather(weather_info, title) #print weather info on a screen
+
         Sinoptik_hourly = get_sinoptik_hourly(raw_page)
-        print(Sinoptik_hourly)
+        weather_info.update(Sinoptik_hourly)
+
+        output_data = make_printable(weather_info)
+        print_weather(output_data, title)
     else:
         pass
 
