@@ -5,6 +5,7 @@ Test project
 from urllib.request import urlopen, Request
 from html import escape, unescape
 from bs4 import BeautifulSoup
+import sys
 
 def get_raw_page(URL):
     """
@@ -263,6 +264,7 @@ def main(provider):
     else:
         pass
 
-main('ACCU')
-main('RP5')
-main('Sinoptik')
+if __name__ == "__main__":
+    main('ACCU')
+    main('RP5')
+    main('Sinoptik')
