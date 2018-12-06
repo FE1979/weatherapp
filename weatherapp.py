@@ -17,21 +17,9 @@ def get_raw_page(URL):
 
     return PAGE
 
-def get_data_by_tags(html_page, open_tag, close_tag = None, end_shift = 0):
-    """ Returns a string from raw data starting after a tag finded
-        Closing tag is optional. end_shift - number of symbols to move left"""
-
-    start = html_page.find(open_tag) + len(open_tag)
-    if close_tag:
-        end = html_page.find(close_tag, start + 1)
-    else:
-        end = len(html_page) - 1
-    html_string = html_page[start:end - end_shift]
-
-    return html_string
-
 def get_accu_info(raw_page):
-    """ Extracts weather info from ACCUWEATHER loaded page
+    """ Extracts weather info from ACCUWEATHER loaded page using BS4
+        returns info in dictionary: Temperature, Condition, RealFeel
     """
     weather_info = {}
 
@@ -47,6 +35,9 @@ def get_accu_info(raw_page):
     return weather_info
 
 def get_accu_hourly(raw_page):
+    """ Gets temperature forecast for next 8 hours
+        Returns dict: Max, Min, Average, Forecast horizon in number of hours
+    """
 
     weather_info = {}
     soup = BeautifulSoup(raw_page, 'html.parser')
@@ -63,11 +54,13 @@ def get_accu_hourly(raw_page):
     weather_info['Max'] = max(hourly_temperature)
     weather_info['Min'] = min(hourly_temperature)
     weather_info['Av'] = sum(hourly_temperature) / len(hourly_temperature)
+    weather_info['Num'] = len(hourly_temperature)
 
     return weather_info
 
 def get_rp5_info(raw_page):
     """ Extracts data from RP5 loaded page
+        returns info in dictionary: Temperature, Condition, RealFeel
     """
     weather_info = {}
     soup = BeautifulSoup(raw_page, 'lxml')
@@ -97,6 +90,9 @@ def get_rp5_info(raw_page):
     return weather_info
 
 def get_rp5_hourly(raw_page):
+    """ Gets temperature forecast for next 8 hours
+        Returns dict: Max, Min, Average, Forecast horizon in number of hours
+    """
 
     weather_info = {}
     table_data = []
@@ -114,11 +110,13 @@ def get_rp5_hourly(raw_page):
     weather_info['Max'] = max(table_data)
     weather_info['Min'] = min(table_data)
     weather_info['Av'] = sum(table_data) / len(table_data)
+    weather_info['Num'] = len(table_data)
 
     return weather_info
 
 def get_sinoptik_info(raw_page):
     """ Extracts data from Sinoptik loaded page
+        returns info in dictionary: Temperature, Condition, RealFeel
     """
     weather_info = {}
 
@@ -139,6 +137,10 @@ def get_sinoptik_info(raw_page):
     return weather_info
 
 def get_sinoptik_hourly(raw_page):
+    """ Gets temperature forecast for next 8 hours
+        Returns dict: Max, Min, Average, Forecast horizon in number of hours
+    """
+
     weather_info = {}
     table_data = []
 
@@ -154,6 +156,7 @@ def get_sinoptik_hourly(raw_page):
     weather_info['Max'] = max(table_data)
     weather_info['Min'] = min(table_data)
     weather_info['Av'] = sum(table_data) / len(table_data)
+    weather_info['Num'] = len(table_data)
 
     return weather_info
 
@@ -186,35 +189,13 @@ def main(provider):
     'ACCU': {'Title': 'Accuweather',
             'URL': "https://www.accuweather.com/uk/ua/kyiv/324505/weather-forecast/324505",
             'URL_hourly': "https://www.accuweather.com/uk/ua/kyiv/324505/hourly-weather-forecast/324505",
-            'TAGS': {'Condition_open_tag': 'txt : \'',
-                    'Condition_close_tag': ',',
-                    'TEMP_open_tag': 'temp_f : \'',
-                    'TEMP_close_tag': ',',
-                    'RealFeel_open_tag': 'rf : \'',
-                    'RealFeel_close_tag': ','}},
+            },
     'RP5': {'Title': 'RP5',
             'URL': "http://rp5.ua/%D0%9F%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0_%D0%B2_%D0%9A%D0%B8%D1%94%D0%B2%D1%96",
-            'TAGS': {'Condition_1': "ftab_1_content",
-                    'Condition_2': "tooltip(this, \'<b>",
-                    'Condition_row': '</tr',
-                    'Condition_close_tag': "</b>",
-                    'TEMP_open_tag': '\"t_0\" style=\"display: block;\">',
-                    'TEMP_close_tag': "<",
-                    'RealFeel_1': "f_temperature",
-                    'RealFeel_2': "<div class=\"t_0\">",
-                    'RealFeel_close_tag': "</b>"}},
+            },
     'Sinoptik': {'Title': 'Sinoptik',
             'URL': "https://ua.sinoptik.ua/%D0%BF%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0-%D0%BA%D0%B8%D1%97%D0%B2",
-            'TAGS': {'SINOPTIK_open_tag': "<div class=\"wMain clearfix\">",
-                    'SINOPTIK_close_tag': "<div class=\"wDescription clearfix\">",
-                    'Condition_1': "today-time",
-                    'Condition_2': "alt=\"",
-                    'Condition_close_tag': "\"",
-                    'TEMP_open_tag': "today-temp\">",
-                    'TEMP_close_tag': "<",
-                    'RealFeel_open_tag_1': "<tr class=\"temperatureSens\">",
-                    'RealFeel_open_tag_2': "cur\" >",
-                    'RealFeel_close_tag': "<"}}
+            }
     }
 
     title = weather_providers[provider]['Title']
