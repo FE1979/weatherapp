@@ -6,6 +6,7 @@ from urllib.request import urlopen, Request
 from html import escape, unescape
 from bs4 import BeautifulSoup
 import sys
+import argparse
 
 def get_raw_page(URL):
     """
@@ -28,10 +29,10 @@ def get_accu_info(raw_page):
 
     current_cond_div = soup.find('div', id='feed-tabs', class_='panel-list cityforecast') #find block with curr condition
     weather_info['Temperature'] = str(current_cond_div.find('span', class_='large-temp').string) #temperature and convert it to string type
-    weather_info['Temperature'] = weather_info['Temperature'][:-1] #remove grade sign
+    weather_info['Temperature'] = int(weather_info['Temperature'][:-1]) #remove grade sign, make it number
     weather_info['Condition'] = str(current_cond_div.find('span', class_='cond').string) #condition
     RealFeel = str(current_cond_div.find('span', class_='realfeel').string) #RealFeel
-    weather_info['RealFeel'] = RealFeel[10:-1] #remove word 'RealFeel' from it and grade sign
+    weather_info['RealFeel'] = int(RealFeel[10:-1]) #remove word 'RealFeel' from it and grade sign. make it number
 
     return weather_info
 
@@ -69,12 +70,12 @@ def get_rp5_info(raw_page):
     temperature_block = soup.find('div', id = 'ArchTemp') #part with Temperature
     temperature_text = temperature_block.find('span', class_='t_0').string #Actual temperature
     temperature_text = temperature_text[:len(temperature_text) - 3] #remove space and Celsius sign
-    weather_info['Temperature'] = temperature_text
+    weather_info['Temperature'] = int(temperature_text) #make it number
 
     RealFeel_block = soup.find('div', class_='ArchiveTempFeeling') #Looking for RF
     RF_text = RealFeel_block.find('span', class_='t_0').string #actual RF
     RF_text = RF_text[:len(RF_text) - 3] #remove space and Celsius sign
-    weather_info['RealFeel'] = RF_text
+    weather_info['RealFeel'] = int(RF_text) #make it number
 
     Cond_block = soup.find('table', id='forecastTable_1') #take table with short hourly description
     Cond_block = Cond_block.find_all('tr') #take all rows
@@ -128,12 +129,12 @@ def get_sinoptik_info(raw_page):
     weather_info['Condition'] = cond
 
     curr_temp = str(curr_temp_cond.find('p', class_='today-temp').get_text())
-    weather_info['Temperature'] = curr_temp[:-2] #delete Celsius sign
+    weather_info['Temperature'] = int(curr_temp[:-2]) #delete Celsius sign and make number
 
     curr_realfeel = soup.find('div', class_='rSide')
     curr_realfeel = curr_realfeel.find('tr', class_='temperatureSens')
     curr_realfeel = str(curr_realfeel.find('td', class_='p1').get_text())
-    weather_info['RealFeel'] = curr_realfeel[:-1] #remove grade sign
+    weather_info['RealFeel'] = int(curr_realfeel[:-1]) #remove grade sign and make number
 
     return weather_info
 
@@ -206,7 +207,7 @@ def make_printable(weather_info):
         if item in weather_info.keys():
             if item in temperature_heads: #if we need to show Celsius
                 output_data[0].append(headers_dict[item])
-                output_data[1].append(str(weather_info[item]) + ' ' + headers_dict['Deg'])
+                output_data[1].append(f"{weather_info[item]:.0f}" + ' ' + headers_dict['Deg'])
             else:
                 output_data[0].append(headers_dict[item])
                 output_data[1].append(str(weather_info[item]))
