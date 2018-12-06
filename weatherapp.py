@@ -121,18 +121,20 @@ def get_sinoptik_info(raw_page, TAGS):
     """ Extracts data from Sinoptik loaded page
     """
     weather_info = {}
-    raw_page = get_data_by_tags(raw_page, TAGS['SINOPTIK_open_tag'], TAGS['SINOPTIK_close_tag'])
 
-    """Temperature"""
-    weather_info['Temperature'] = get_data_by_tags(raw_page, TAGS['TEMP_open_tag'], TAGS['TEMP_close_tag'], 6)
+    soup = BeautifulSoup(raw_page, 'html.parser')
+    curr_temp_cond = soup.find('div', class_='lSide')
+    cond = list(curr_temp_cond.find('div', class_='img').children)
+    cond = str(cond[1]['alt'])
+    weather_info['Condition'] = cond
 
-    """Condition"""
-    weather_info['Condition'] = get_data_by_tags(raw_page, TAGS['Condition_1'])
-    weather_info['Condition'] = get_data_by_tags(weather_info['Condition'], TAGS['Condition_2'], TAGS['Condition_close_tag'])
+    curr_temp = str(curr_temp_cond.find('p', class_='today-temp').get_text())
+    weather_info['Temperature'] = curr_temp[:-2] #delete Celsius sign
 
-    """RealFeel"""
-    weather_info['RealFeel'] = get_data_by_tags(raw_page, TAGS['RealFeel_open_tag_1'])
-    weather_info['RealFeel'] = get_data_by_tags(weather_info['RealFeel'], TAGS['RealFeel_open_tag_2'], TAGS['RealFeel_close_tag'], 5)
+    curr_realfeel = soup.find('div', class_='rSide')
+    curr_realfeel = curr_realfeel.find('tr', class_='temperatureSens')
+    curr_realfeel = str(curr_realfeel.find('td', class_='p1').get_text())
+    weather_info['RealFeel'] = curr_realfeel[:-1] #remove grade sign
 
     return weather_info
 
