@@ -96,6 +96,27 @@ def get_rp5_info(raw_page):
 
     return weather_info
 
+def get_rp5_hourly(raw_page):
+
+    weather_info = {}
+    table_data = []
+    soup = BeautifulSoup(raw_page, 'lxml')
+
+    table = soup.find('table', id='forecastTable_1') #get table
+    table = table.find_all('tr') #take all rows
+    td = list(table)[4].find_all('td') #take row with temperature
+    for item in td: # for each item in row...
+        t_0 = item.find_all('div', class_='t_0') #find items with temperature
+        for i in t_0: # for each item with temp
+            t = str(i.find('b').get_text()) #get text from it
+            table_data.append(int(t))
+
+    weather_info['Max'] = max(table_data)
+    weather_info['Min'] = min(table_data)
+    weather_info['Av'] = sum(table_data) / len(table_data)
+
+    return weather_info
+
 def get_sinoptik_info(raw_page, TAGS):
     """ Extracts data from Sinoptik loaded page
     """
