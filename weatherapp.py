@@ -8,6 +8,22 @@ from bs4 import BeautifulSoup
 import sys
 import argparse
 
+""" Define global params """
+weather_providers = {
+'ACCU': {'Title': 'Accuweather',
+        'URL': "https://www.accuweather.com/uk/ua/kyiv/324505/weather-forecast/324505",
+        'URL_hourly': "https://www.accuweather.com/uk/ua/kyiv/324505/hourly-weather-forecast/324505",
+        },
+'RP5': {'Title': 'RP5',
+        'URL': "http://rp5.ua/%D0%9F%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0_%D0%B2_%D0%9A%D0%B8%D1%94%D0%B2%D1%96",
+        },
+'Sinoptik': {'Title': 'Sinoptik',
+        'URL': "https://ua.sinoptik.ua/%D0%BF%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0-%D0%BA%D0%B8%D1%97%D0%B2",
+        }
+}
+
+""" End of global params """
+
 def get_raw_page(URL):
     """
     Loads a page from given URL
@@ -168,8 +184,12 @@ def print_weather(output_data, title):
     input data - list of two lists: headers and values
     """
     def create_table(table_data, title):
-        first_column_len = len(max(table_data[0], key = lambda item: len(item))) + 2
-        second_column_len = len(max(table_data[1], key = lambda item: len(item))) + 2
+        try:
+            first_column_len = len(max(table_data[0], key = lambda item: len(item))) + 2
+            second_column_len = len(max(table_data[1], key = lambda item: len(item))) + 2
+        except IndexError:
+            first_column_len = 20
+            second_column_len = 20
         width = first_column_len + second_column_len + 1
         counter = len(table_data[0])
         i = 0
@@ -181,7 +201,7 @@ def print_weather(output_data, title):
 
         while i < counter: #print out headers and values
             print('| ' + table_data[0][i].ljust(first_column_len - 1, ' '), end ="")
-            print('| ' + table_data[1][i].ljust(second_column_len-1, ' ') + '|')
+            print('| ' + table_data[1][i].ljust(second_column_len - 1, ' ') + '|')
             i += 1
             pass
         #bottom line
@@ -216,56 +236,93 @@ def make_printable(weather_info):
 
     return output_data
 
-def main(provider):
-    weather_providers = {
-    'ACCU': {'Title': 'Accuweather',
-            'URL': "https://www.accuweather.com/uk/ua/kyiv/324505/weather-forecast/324505",
-            'URL_hourly': "https://www.accuweather.com/uk/ua/kyiv/324505/hourly-weather-forecast/324505",
-            },
-    'RP5': {'Title': 'RP5',
-            'URL': "http://rp5.ua/%D0%9F%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0_%D0%B2_%D0%9A%D0%B8%D1%94%D0%B2%D1%96",
-            },
-    'Sinoptik': {'Title': 'Sinoptik',
-            'URL': "https://ua.sinoptik.ua/%D0%BF%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0-%D0%BA%D0%B8%D1%97%D0%B2",
-            }
-    }
+def take_args():
+    """
+    Set, parse and manage CLI arguments
+    """
 
-    title = weather_providers[provider]['Title']
-    URL = ''
-    URL = weather_providers[provider]['URL']
+    parser = argparse.ArgumentParser(prog="Weatherapp", epilog="Get fun!",
+                                    description="""A program shows you current
+                                    weather condition in Kyiv and, optionaly,
+                                    temperature forecast""",
+                                    usage="""weatherapp -provider -forecast""")
+    parser.add_argument("-al", "--all", help="Shows weather from all providers",
+                        action="store_true", default=True)
+    parser.add_argument("-r", "--rp5", help="Weather from RP5",
+                        action="store_true")
+    parser.add_argument("-a", "--accu", help="Weather from Accuweather",
+                        action="store_true")
+    parser.add_argument("-s", "--sin", help="Weather from Sinoptik",
+                        action="store_true")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("-f", "--forec", help="Display forecast for next hours",
+                        action="store_true", default=True)
+    group.add_argument("-nf", "--noforec", help="Do not display forecast for next hours",
+                        action='store_true')
 
-    raw_page = get_raw_page(URL) #load a page
+    args = parser.parse_args()
 
-    if provider == 'ACCU':
-        weather_info = get_accu_info(raw_page) #extract data from a page
-        raw_page = get_raw_page(weather_providers[provider]['URL_hourly']) #load forecast
-        ACCU_hourly = get_accu_hourly(raw_page)
-        weather_info.update(ACCU_hourly) #update with forecast
+    if args.all: #set all providers to show
+        args.accu = args.rp5 = args.sin = True
+    if args.noforec: #set no forecast to show
+        args.forec = False
 
-        output_data = make_printable(weather_info) #create printable
-        print_weather(output_data, title) #print weather info on a screen
+    return args
 
-    elif provider == 'RP5':
-        weather_info = get_rp5_info(raw_page) #extract data from a page
+def run_app(provider, forec):
+    """
+    Runs loading, scraping and printing out weather info depending on given flags
+    """
+    weather_info = {}
+    title = provider['Title']
+    URL = provider['URL']
+    try:
+        URL_hourly = provider['URL_hourly']
+    except KeyError:
+        URL_hourly = provider['URL']
 
-        RP5_hourly = get_rp5_hourly(raw_page)
-        weather_info.update(RP5_hourly)
+    raw_page = get_raw_page(URL), #load a page
+    if title == 'Accuweather':
+        weather_info = get_accu_info(raw_page), #extract data from a page
+        if forec:
+            raw_page = get_raw_page(URL_hourly), #load forecast
+            info_hourly = get_accu_hourly(raw_page), #run if forecast called
+            weather_info.update(info_hourly), #update with forecast
 
-        output_data = make_printable(weather_info)
-        print_weather(output_data, title)
+    elif title == 'RP5':
+        weather_info = get_rp5_info(raw_page), #extract data from a page
+        if forec:
+            raw_page = get_raw_page(URL_hourly), #load forecast
+            info_hourly = get_rp5_hourly(raw_page), #run if forecast called
+            weather_info.update(info_hourly), #update with forecast
 
-    elif provider == 'Sinoptik':
-        weather_info = get_sinoptik_info(raw_page) #extract data from a page
+    elif title == 'Sinoptik':
+        weather_info = get_sinoptik_info(raw_page), #extract data from a page
+        if forec:
+            raw_page = get_raw_page(URL_hourly), #load forecast
+            info_hourly = get_sinoptik_hourly(raw_page), #run if forecast called
+            weather_info.update(info_hourly), #update with forecast
 
-        Sinoptik_hourly = get_sinoptik_hourly(raw_page)
-        weather_info.update(Sinoptik_hourly)
+    output_data = make_printable(weather_info), #create printable
+    print_weather(output_data, title) #print weather info on a screen
 
-        output_data = make_printable(weather_info)
-        print_weather(output_data, title)
-    else:
-        pass
+    pass
 
+def main():
+    args = take_args()
+
+    if args.all:
+        args.accu = args.rp5 = args.sin = True #make all shown
+    if args.noforec:
+        args.forec = False
+    run_app(weather_providers['ACCU'], args.forec)
+    """
+    if args.accu:
+        run_app(weather_providers['ACCU'], args.forec)
+    if args.rp5:
+        run_app(weather_providers['RP5'], args.forec)
+    if args.sin:
+        run_app(weather_providers['Sinoptik'], args.forec)
+    """
 if __name__ == "__main__":
-    main('ACCU')
-    main('RP5')
-    main('Sinoptik')
+    main()
