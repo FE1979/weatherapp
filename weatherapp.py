@@ -187,12 +187,10 @@ def print_weather(output_data, title):
     input data - list of two lists: headers and values
     """
     def create_table(table_data, title):
-        try:
-            first_column_len = len(max(table_data[0], key = lambda item: len(item))) + 2
-            second_column_len = len(max(table_data[1], key = lambda item: len(item))) + 2
-        except IndexError:
-            first_column_len = 20
-            second_column_len = 20
+
+        first_column_len = len(max(table_data[0], key = lambda item: len(item))) + 2
+        second_column_len = len(max(table_data[1], key = lambda item: len(item))) + 2
+
         width = first_column_len + second_column_len + 1
         counter = len(table_data[0])
         i = 0
@@ -317,14 +315,10 @@ def run_app(provider, forec):
 def main():
     args = take_args()
 
-
-
     if args.accu:
         run_app(weather_providers['ACCU'], args.forec)
-
     if args.rp5:
         run_app(weather_providers['RP5'], args.forec)
-
     if args.sin:
         run_app(weather_providers['Sinoptik'], args.forec)
 
