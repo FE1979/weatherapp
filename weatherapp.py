@@ -88,9 +88,12 @@ def get_rp5_info(raw_page):
     temperature_text = temperature_text[:len(temperature_text) - 3] #remove space and Celsius sign
     weather_info['Temperature'] = int(temperature_text) #make it number
 
-    RealFeel_block = soup.find('div', class_='ArchiveTempFeeling') #Looking for RF
-    RF_text = RealFeel_block.find('span', class_='t_0').string #actual RF
-    RF_text = RF_text[:len(RF_text) - 3] #remove space and Celsius sign
+    RealFeel_block = soup.find('table', id='forecastTable_1') #take table with short hourly description
+    RealFeel_block = RealFeel_block.find_all('tr') #take all rows
+    RealFeel_block = list(RealFeel_block)[6].find_all('td') #take all columns in 6th row
+    RealFeel_block = list(RealFeel_block)[1] #select 2nd col
+    RF_text = str(list(RealFeel_block.children)[1].get_text()) # and make it string
+
     weather_info['RealFeel'] = int(RF_text) #make it number
 
     Cond_block = soup.find('table', id='forecastTable_1') #take table with short hourly description
@@ -118,7 +121,7 @@ def get_rp5_hourly(raw_page):
 
     table = soup.find('table', id='forecastTable_1') #get table
     table = table.find_all('tr') #take all rows
-    td = list(table)[4].find_all('td') #take row with temperature
+    td = list(table)[5].find_all('td') #take row with temperature
     for item in td: # for each item in row...
         t_0 = item.find_all('div', class_='t_0') #find items with temperature
         for i in t_0: # for each item with temp
@@ -318,10 +321,10 @@ def main():
 
     if args.accu:
         run_app(weather_providers['ACCU'], args.forec)
-    """
+
     if args.rp5:
         run_app(weather_providers['RP5'], args.forec)
-    """
+
     if args.sin:
         run_app(weather_providers['Sinoptik'], args.forec)
 
