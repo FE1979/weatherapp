@@ -262,10 +262,13 @@ def take_args():
 
     args = parser.parse_args()
 
-    if args.all: #set all providers to show
-        args.accu = args.rp5 = args.sin = True
-    if args.noforec: #set no forecast to show
-        args.forec = False
+    if args.accu or args.rp5 or args.sin: args.all = False #switch all to False if any of providers called
+
+    if args.all:
+        args.accu = args.rp5 = args.sin = True #make all shown
+
+    if args.noforec:
+        args.forec = False #set forecast not to show
 
     return args
 
@@ -281,29 +284,29 @@ def run_app(provider, forec):
     except KeyError:
         URL_hourly = provider['URL']
 
-    raw_page = get_raw_page(URL), #load a page
+    raw_page = get_raw_page(URL) #load a page
     if title == 'Accuweather':
-        weather_info = get_accu_info(raw_page), #extract data from a page
+        weather_info = get_accu_info(raw_page) #extract data from a page
         if forec:
-            raw_page = get_raw_page(URL_hourly), #load forecast
-            info_hourly = get_accu_hourly(raw_page), #run if forecast called
-            weather_info.update(info_hourly), #update with forecast
+            raw_page = get_raw_page(URL_hourly) #load forecast
+            info_hourly = get_accu_hourly(raw_page) #run if forecast called
+            weather_info.update(info_hourly) #update with forecast
 
     elif title == 'RP5':
-        weather_info = get_rp5_info(raw_page), #extract data from a page
+        weather_info = get_rp5_info(raw_page) #extract data from a page
         if forec:
-            raw_page = get_raw_page(URL_hourly), #load forecast
-            info_hourly = get_rp5_hourly(raw_page), #run if forecast called
-            weather_info.update(info_hourly), #update with forecast
+            raw_page = get_raw_page(URL_hourly) #load forecast
+            info_hourly = get_rp5_hourly(raw_page) #run if forecast called
+            weather_info.update(info_hourly) #update with forecast
 
     elif title == 'Sinoptik':
-        weather_info = get_sinoptik_info(raw_page), #extract data from a page
+        weather_info = get_sinoptik_info(raw_page) #extract data from a page
         if forec:
-            raw_page = get_raw_page(URL_hourly), #load forecast
-            info_hourly = get_sinoptik_hourly(raw_page), #run if forecast called
-            weather_info.update(info_hourly), #update with forecast
+            raw_page = get_raw_page(URL_hourly) #load forecast
+            info_hourly = get_sinoptik_hourly(raw_page) #run if forecast called
+            weather_info.update(info_hourly) #update with forecast
 
-    output_data = make_printable(weather_info), #create printable
+    output_data = make_printable(weather_info) #create printable
     print_weather(output_data, title) #print weather info on a screen
 
     pass
@@ -311,18 +314,16 @@ def run_app(provider, forec):
 def main():
     args = take_args()
 
-    if args.all:
-        args.accu = args.rp5 = args.sin = True #make all shown
-    if args.noforec:
-        args.forec = False
-    run_app(weather_providers['ACCU'], args.forec)
-    """
+
+
     if args.accu:
         run_app(weather_providers['ACCU'], args.forec)
+    """
     if args.rp5:
         run_app(weather_providers['RP5'], args.forec)
+    """
     if args.sin:
         run_app(weather_providers['Sinoptik'], args.forec)
-    """
+
 if __name__ == "__main__":
     main()
