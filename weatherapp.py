@@ -22,6 +22,9 @@ weather_providers = {
         }
 }
 
+ACTUAL_WEATHER_INFO = {}
+ACTUAL_PRINTABLE_INFO = {}
+
 """ End of global params """
 
 def get_raw_page(URL):
@@ -237,21 +240,39 @@ def make_printable(weather_info):
 
     return output_data
 
+def save_csv(ACTUAL_WEATHER_INFO, filename):
+    """ Saves weather info into comma-separated file
+    with two columns: head, data
+    new entry separated by new line sign"""
+    write_line = ''
+    with open(filename+'.csv', 'w') as f:
+        for item in ACTUAL_WEATHER_INFO:
+            write_line = item +', ,\n'
+            f.write(write_line)
+            for item_data in ACTUAL_WEATHER_INFO[item]:
+                write_line = item_data + ',' + \
+                str(ACTUAL_WEATHER_INFO[item][item_data]) + '\n'
+                f.write(write_line)
+    pass
+
+def save_txt(ACTUAL_PRINTABLE_INFO, filename):
+    pass
+
 def take_args():
     """
     Set, parse and manage CLI arguments
     """
 
     parser = argparse.ArgumentParser(prog="Weatherapp", epilog="Get fun!",
-                                    description="""A program shows you current
-                                    weather condition in Kyiv and, optionaly,
-                                    temperature forecast""",
-                                    usage="""weatherapp -provider -forecast""")
+        description="""A program shows you current weather condition in Kyiv
+        and, optionaly, temperature forecast""",
+        usage="""weatherapp -provider -forecast -csv/-save [file_name]""")
+
     parser.add_argument("-al", "--all", help="Shows weather from all providers",
                         action="store_true", default=True)
-    parser.add_argument("-r", "--rp5", help="Weather from RP5",
-                        action="store_true")
     parser.add_argument("-a", "--accu", help="Weather from Accuweather",
+                        action="store_true")
+    parser.add_argument("-r", "--rp5", help="Weather from RP5",
                         action="store_true")
     parser.add_argument("-s", "--sin", help="Weather from Sinoptik",
                         action="store_true")
@@ -260,6 +281,12 @@ def take_args():
                         action="store_true", default=True)
     group.add_argument("-nf", "--noforec", help="Do not display forecast for next hours",
                         action='store_true')
+    parser.add_argument("-csv", metavar="[filename]",
+                        help="Export weather info to CSV formatted file",
+                        type=str)
+    parser.add_argument("-save", metavar="[filename]",
+                        help="Saves printed out info into txt file",
+                        type=str)
 
     args = parser.parse_args()
 
@@ -273,7 +300,7 @@ def take_args():
 
     return args
 
-def run_app(provider, forec):
+def run_app(*args, provider, forec):
     """
     Runs loading, scraping and printing out weather info depending on given flags
     """
@@ -310,17 +337,26 @@ def run_app(provider, forec):
     output_data = make_printable(weather_info) #create printable
     print_weather(output_data, title) #print weather info on a screen
 
+    """ save loaded data """
+    ACTUAL_WEATHER_INFO[title] = weather_info
+    ACTUAL_PRINTABLE_INFO[title] = output_data[:]
+
     pass
 
 def main():
     args = take_args()
 
     if args.accu:
-        run_app(weather_providers['ACCU'], args.forec)
+        run_app(args, provider=weather_providers['ACCU'], forec=args.forec)
     if args.rp5:
-        run_app(weather_providers['RP5'], args.forec)
+        run_app(args, provider=weather_providers['RP5'], forec=args.forec)
     if args.sin:
-        run_app(weather_providers['Sinoptik'], args.forec)
+        run_app(args, provider=weather_providers['Sinoptik'], forec=args.forec)
+    if args.csv:
+        save_csv(ACTUAL_WEATHER_INFO, args.csv)
+        #print(ACTUAL_WEATHER_INFO)
+    if args.save:
+        save_txt(ACTUAL_PRINTABLE_INFO, args.save)
 
 if __name__ == "__main__":
     main()
