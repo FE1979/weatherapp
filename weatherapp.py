@@ -189,30 +189,43 @@ def print_weather(output_data, title):
     Prints weather on a screen
     input data - list of two lists: headers and values
     """
-    def create_table(table_data, title):
+    print(nice_output(output_data, title))
 
-        first_column_len = len(max(table_data[0], key = lambda item: len(item))) + 2
-        second_column_len = len(max(table_data[1], key = lambda item: len(item))) + 2
 
-        width = first_column_len + second_column_len + 1
-        counter = len(table_data[0])
-        i = 0
+def nice_output(table_data, title):
+    """ This forms nice table output for printing or saving to the file
+    Replaced old create_table
+    """
 
-        #print top of table with title
-        print('+' + '-'*(width) + '+')
-        print('|' + title.center(width, ' ') + '|')
-        print('+' + '-'*(first_column_len) + '+' + '-'*(second_column_len) + '+')
+    nice_txt = ''
+    first_column_len = len(max(table_data[0], key = lambda item: len(item))) + 2
+    second_column_len = len(max(table_data[1], key = lambda item: len(item))) + 2
 
-        while i < counter: #print out headers and values
-            print('| ' + table_data[0][i].ljust(first_column_len - 1, ' '), end ="")
-            print('| ' + table_data[1][i].ljust(second_column_len - 1, ' ') + '|')
-            i += 1
-            pass
-        #bottom line
-        print('+' + '-'*(first_column_len) + '+' + '-'*(second_column_len) + '+')
+    width = first_column_len + second_column_len + 1
+    counter = len(table_data[0])
+    i = 0
+
+    #print top of table with title
+    nice_txt = '+' + '-'*(width) + '+' + '\n'
+    nice_txt = nice_txt + '|' + title.center(width, ' ') + '|' + '\n'
+    nice_txt = nice_txt +'+' + '-'*(first_column_len) \
+                        + '+' + '-'*(second_column_len) + '+' + '\n'
+
+    while i < counter: #print out headers and values
+        nice_txt = nice_txt \
+            + '| ' + str(table_data[0][i]).ljust(first_column_len-1, ' ')
+        nice_txt = nice_txt \
+            + '| ' + str(table_data[1][i]).ljust(second_column_len-1, ' ') + '|'
+        nice_txt = nice_txt + '\n'
+        i += 1
         pass
+    #bottom line
+    nice_txt = nice_txt \
+            + '+' + '-'*(first_column_len) + '+' + '-'*(second_column_len) + '+'
+    #separation blank line
+    nice_txt = nice_txt + '\n'
 
-    create_table(output_data, title)
+    return nice_txt
 
 def make_printable(weather_info):
     """ Transform weather data to printable format
@@ -244,18 +257,24 @@ def save_csv(ACTUAL_WEATHER_INFO, filename):
     """ Saves weather info into comma-separated file
     with two columns: head, data
     new entry separated by new line sign"""
-    write_line = ''
+    write_line = '' #container for writing a line in file
     with open(filename+'.csv', 'w') as f:
         for item in ACTUAL_WEATHER_INFO:
-            write_line = item +', ,\n'
+            write_line = item +', ,\n' #header for next provider
             f.write(write_line)
             for item_data in ACTUAL_WEATHER_INFO[item]:
                 write_line = item_data + ',' + \
-                str(ACTUAL_WEATHER_INFO[item][item_data]) + '\n'
+                str(ACTUAL_WEATHER_INFO[item][item_data]) + '\n' #row head and data
                 f.write(write_line)
     pass
 
 def save_txt(ACTUAL_PRINTABLE_INFO, filename):
+    """ Saves to txt file printable weather info """
+
+    with open(filename+'.txt', 'w') as f:
+        for item in ACTUAL_PRINTABLE_INFO:
+            f.write(ACTUAL_PRINTABLE_INFO[item])
+
     pass
 
 def take_args():
@@ -339,7 +358,7 @@ def run_app(*args, provider, forec):
 
     """ save loaded data """
     ACTUAL_WEATHER_INFO[title] = weather_info
-    ACTUAL_PRINTABLE_INFO[title] = output_data[:]
+    ACTUAL_PRINTABLE_INFO[title] = nice_output(output_data, title)
 
     pass
 
@@ -354,7 +373,6 @@ def main():
         run_app(args, provider=weather_providers['Sinoptik'], forec=args.forec)
     if args.csv:
         save_csv(ACTUAL_WEATHER_INFO, args.csv)
-        #print(ACTUAL_WEATHER_INFO)
     if args.save:
         save_txt(ACTUAL_PRINTABLE_INFO, args.save)
 
