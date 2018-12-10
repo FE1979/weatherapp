@@ -7,12 +7,14 @@ from html import escape, unescape
 from bs4 import BeautifulSoup
 import sys
 import argparse
+import re
 
 """ Define global params """
 weather_providers = {
 'ACCU': {'Title': 'Accuweather',
         'URL': "https://www.accuweather.com/uk/ua/kyiv/324505/weather-forecast/324505",
         'URL_hourly': "https://www.accuweather.com/uk/ua/kyiv/324505/hourly-weather-forecast/324505",
+        'URL_next_day': "https://www.accuweather.com/uk/ua/kyiv/324505/daily-weather-forecast/324505?day=2"
         },
 'RP5': {'Title': 'RP5',
         'URL': "http://rp5.ua/%D0%9F%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0_%D0%B2_%D0%9A%D0%B8%D1%94%D0%B2%D1%96",
@@ -27,6 +29,7 @@ ACTUAL_PRINTABLE_INFO = {}
 
 """ End of global params """
 
+""" Page loading and scraping functions """
 def get_raw_page(URL):
     """
     Loads a page from given URL
@@ -76,6 +79,39 @@ def get_accu_hourly(raw_page):
     weather_info['Min'] = min(hourly_temperature)
     weather_info['Av'] = sum(hourly_temperature) / len(hourly_temperature)
     weather_info['Num'] = len(hourly_temperature)
+
+    return weather_info
+
+def get_accu_next_day(raw_page):
+    """ Extracts weather info for next day
+        returns info in dictionary: Temperature, Condition, RealFeel
+    """
+    weather_info = {}
+    regex = "  1?" #to remove unnessecary symbols
+
+    soup = BeautifulSoup(raw_page, 'html.parser')
+
+    next_day_forec = soup.find('div', id="detail-day-night") #find dey/night forecast panel
+    day_forec = next_day_forec.find('div', class_="day") #day part
+    night_forec = next_day_forec.find('div', class_='night') #night part
+
+    #scrap day info
+    Next_day_temp = day_forec.find('span', class_="large-temp").get_text()
+    weather_info['Next_day_temp'] = int(str(Next_day_temp[:-5])) #remove grade sign and 'Макс' word
+    RealFeel = str(next_day_forec.find('span', class_='realfeel').string) #RealFeel
+    weather_info['Next_day_RF'] = int(RealFeel[10:-1]) #remove word 'RealFeel' from it and grade sign. make it number
+    weather_info['Next_day_condition'] = str(next_day_forec.find('div', class_='cond').string) #condition
+    weather_info['Next_day_condition'] = re.sub(regex, '', weather_info['Next_day_condition']) #remove spaces
+    weather_info['Next_day_condition'] = weather_info['Next_day_condition'][2:-2] #remove \r\n on the sides
+
+    #scrap night info
+    Next_night_temp = night_forec.find('span', class_="large-temp").get_text()
+    weather_info['Next_night_temp'] = int(str(Next_night_temp[:-4])) #remove grade sign and 'Мін' word
+    RealFeel = str(night_forec.find('span', class_='realfeel').string) #RealFeel
+    weather_info['Next_night_RF'] = int(RealFeel[10:-1]) #remove word 'RealFeel' from it and grade sign. make it number
+    weather_info['Next_night_condition'] = str(night_forec.find('div', class_='cond').string) #condition
+    weather_info['Next_night_condition'] = re.sub(regex, '', weather_info['Next_night_condition']) #remove spaces
+    weather_info['Next_night_condition'] = weather_info['Next_night_condition'][2:-2] #remove \r\n on the sides
 
     return weather_info
 
@@ -184,13 +220,13 @@ def get_sinoptik_hourly(raw_page):
 
     return weather_info
 
+""" Output functions """
 def print_weather(output_data, title):
     """
     Prints weather on a screen
     input data - list of two lists: headers and values
     """
     print(nice_output(output_data, title))
-
 
 def nice_output(table_data, title):
     """ This forms nice table output for printing or saving to the file
@@ -233,15 +269,27 @@ def make_printable(weather_info):
         temperature_heads - to insert Celsius sign if needed
         print_order - to define which way weather_info will show
     """
-    headers_dict = {'Temperature': 'Температура', 'RealFeel': 'Відчувається як',
-                    'Condition': 'На небі', 'Max': 'Максимальна', 'Min': 'Мінімальна',
-                    'Av': 'Середня', 'Num': 'Прогноз на, годин', 'Deg': f"{unescape('&deg')}C"}
-    temperature_heads = ['Temperature', 'RealFeel', 'Max', 'Min', 'Av']
-    print_order = ['Temperature', 'RealFeel', 'Condition', 'Num', 'Max', 'Min', 'Av']
+    headers_dict = {'Temperature': 'Температура',
+                    'RealFeel': 'Відчувається як',
+                    'Condition': 'На небі',
+                    'Max': 'Максимальна', 'Min': 'Мінімальна', 'Av': 'Середня',
+                    'Num': 'Прогноз на, годин',
+                    'Deg': f"{unescape('&deg')}C",
+                    'Next_day_temp': 'Максимальна вдень',
+                    'Next_day_RF': 'Відчуватиметься вдень як',
+                    'Next_day_condition': 'На небі вдень буде',
+                    'Next_night_temp': 'Мінімальна вночі',
+                    'Next_night_RF': 'Відчуватиметься вночі як',
+                    'Next_night_condition': 'На небі вночі буде'}
+    temperature_heads = ['Temperature', 'RealFeel', 'Max', 'Min', 'Av',
+                        'Next_day_temp', 'Next_day_RF', 'Next_night_temp', 'Next_night_RF']
+    print_order = ['Temperature', 'RealFeel', 'Condition', 'Num', 'Max', 'Min', 'Av',
+                    'Next_day_temp', 'Next_day_RF', 'Next_day_condition',
+                    'Next_night_temp', 'Next_night_RF', 'Next_night_condition']
     output_data = [[],[]]
 
-    for item in print_order:
-        if item in weather_info.keys():
+    for item in print_order: #in printing order
+        if item in weather_info.keys(): #if there is a data
             if item in temperature_heads: #if we need to show Celsius
                 output_data[0].append(headers_dict[item])
                 output_data[1].append(f"{weather_info[item]:.0f}" + ' ' + headers_dict['Deg'])
@@ -277,6 +325,7 @@ def save_txt(ACTUAL_PRINTABLE_INFO, filename):
 
     pass
 
+""" Main functions """
 def take_args():
     """
     Set, parse and manage CLI arguments
@@ -294,6 +343,8 @@ def take_args():
     parser.add_argument("-r", "--rp5", help="Weather from RP5",
                         action="store_true")
     parser.add_argument("-s", "--sin", help="Weather from Sinoptik",
+                        action="store_true")
+    parser.add_argument("-next", help="Next day forecast (ACCU only)",
                         action="store_true")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-f", "--forec", help="Display forecast for next hours",
@@ -316,6 +367,8 @@ def take_args():
 
     if args.noforec:
         args.forec = False #set forecast not to show
+    if not args.accu and args.next: #if "next" command used w/out ACCU
+        print("'Next' option is for Accuweather only. Please, type -a to choose Accuweather.")
 
     return args
 
@@ -330,14 +383,25 @@ def run_app(*args, provider, forec):
         URL_hourly = provider['URL_hourly']
     except KeyError:
         URL_hourly = provider['URL']
+    try:
+        URL_next_day = provider['URL_next_day']
+    except KeyError:
+        URL_hourly = provider['URL']
 
     raw_page = get_raw_page(URL) #load a page
     if title == 'Accuweather':
-        weather_info = get_accu_info(raw_page) #extract data from a page
-        if forec:
-            raw_page = get_raw_page(URL_hourly) #load forecast
-            info_hourly = get_accu_hourly(raw_page) #run if forecast called
-            weather_info.update(info_hourly) #update with forecast
+
+        if args[0].next:
+            raw_page = get_raw_page(URL_next_day) #load forecast
+            info_next_day = get_accu_next_day(raw_page) #run if forecast called
+            weather_info.update(info_next_day) #update with forecast
+
+        if not args[0].next:
+            weather_info = get_accu_info(raw_page) #extract data from a page
+            if forec:
+                raw_page = get_raw_page(URL_hourly) #load forecast
+                info_hourly = get_accu_hourly(raw_page) #run if forecast called
+                weather_info.update(info_hourly) #update with forecast
 
     elif title == 'RP5':
         weather_info = get_rp5_info(raw_page) #extract data from a page
