@@ -186,10 +186,9 @@ def get_rp5_next_day(raw_page):
 
     forecast = soup.find('div', id="forecastShort-content").get_text() #get string with short forecast
     #Extract forecast: Max, Min temperature and condition
-    regex = "Завтра: "
+    regex = "Завтра.*\. "
     forecast_start = re.search(regex, forecast) #find starting point of forecast info
-    forecast = forecast[forecast_start.end():]
-
+    forecast = forecast[forecast_start.start():forecast_start.end()]
     regex = r".\d"
     temperatures_as_str = re.findall(regex, forecast) #find all numbers
     weather_info['Next_day_temp_max'] = int(temperatures_as_str[0]) #First is Max in Celsius
@@ -287,6 +286,10 @@ def nice_output(table_data, title):
     nice_txt = ''
     first_column_len = len(max(table_data[0], key = lambda item: len(item))) + 2
     second_column_len = len(max(table_data[1], key = lambda item: len(item))) + 2
+    header_len = len(title)
+
+    if header_len > first_column_len + second_column_len:
+        second_column_len = header_len - first_column_len
 
     width = first_column_len + second_column_len + 1
     counter = len(table_data[0])
@@ -484,6 +487,10 @@ def run_app(*args, provider, forec):
                 info_hourly = get_sinoptik_hourly(raw_page) #run if forecast called
                 weather_info.update(info_hourly) #update with forecast
 
+    if args[0].next:
+        title = title + ", прогноз на завтра"
+    else:
+        title = title + ", поточна погода"
     output_data = make_printable(weather_info) #create printable
     print_weather(output_data, title) #print weather info on a screen
 
