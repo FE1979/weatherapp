@@ -5,9 +5,10 @@ Test project
 from urllib.request import urlopen, Request
 from html import escape, unescape
 from bs4 import BeautifulSoup
+import re
 import sys
 import argparse
-import re
+
 
 """ Define global params """
 weather_providers = {
@@ -174,6 +175,34 @@ def get_rp5_hourly(raw_page):
 
     return weather_info
 
+def get_rp5_next_day(raw_page):
+    """ Extracts weather info for next day
+        returns info in dictionary: Temperature, Condition, RealFeel
+        using RegEx
+    """
+    weather_info = {}
+
+    soup = BeautifulSoup(raw_page, 'lxml')
+
+    forecast = soup.find('div', id="forecastShort-content").get_text() #get string with short forecast
+    #Extract forecast: Max, Min temperature and condition
+    regex = "Завтра: "
+    forecast_start = re.search(regex, forecast) #find starting point of forecast info
+    forecast = forecast[forecast_start.end():]
+
+    regex = r".\d"
+    temperatures_as_str = re.findall(regex, forecast) #find all numbers
+    weather_info['Next_day_temp_max'] = int(temperatures_as_str[0]) #First is Max in Celsius
+    weather_info['Next_day_temp_min'] = int(temperatures_as_str[1]) #Second is Min in Celsius
+
+    regex = ".*.\d\d .C.F, " #all =/-, numbers and C/F signs ended with comma and space
+    cond_pos = re.search(regex, forecast) #find start poin of cond description
+    forecast = forecast[cond_pos.end():].capitalize() #take a cond string with Capital first letter
+    regex = "  +"
+    weather_info['Next_day_condition'] = re.sub(regex, '', forecast) #remove spaces
+
+    return weather_info
+
 def get_sinoptik_info(raw_page):
     """ Extracts data from Sinoptik loaded page
         returns info in dictionary: Temperature, Condition, RealFeel
@@ -276,15 +305,19 @@ def make_printable(weather_info):
                     'Num': 'Прогноз на, годин',
                     'Deg': f"{unescape('&deg')}C",
                     'Next_day_temp': 'Максимальна вдень',
+                    'Next_day_temp_max': 'Максимальна вдень', #for RP5
+                    'Next_day_temp_min': 'Мінімальна вдень', #for RP5
                     'Next_day_RF': 'Відчуватиметься вдень як',
                     'Next_day_condition': 'На небі вдень буде',
                     'Next_night_temp': 'Мінімальна вночі',
                     'Next_night_RF': 'Відчуватиметься вночі як',
                     'Next_night_condition': 'На небі вночі буде'}
     temperature_heads = ['Temperature', 'RealFeel', 'Max', 'Min', 'Av',
-                        'Next_day_temp', 'Next_day_RF', 'Next_night_temp', 'Next_night_RF']
+                        'Next_day_temp', 'Next_day_RF', 'Next_night_temp',
+                        'Next_night_RF', 'Next_day_temp_max', 'Next_day_temp_min']
     print_order = ['Temperature', 'RealFeel', 'Condition', 'Num', 'Max', 'Min', 'Av',
-                    'Next_day_temp', 'Next_day_RF', 'Next_day_condition',
+                    'Next_day_temp', 'Next_day_temp_max', 'Next_day_temp_min',
+                    'Next_day_RF', 'Next_day_condition',
                     'Next_night_temp', 'Next_night_RF', 'Next_night_condition']
     output_data = [[],[]]
 
@@ -367,8 +400,8 @@ def take_args():
 
     if args.noforec:
         args.forec = False #set forecast not to show
-    if not args.accu and args.next: #if "next" command used w/out ACCU
-        print("'Next' option is for Accuweather only. Please, type -a to choose Accuweather.")
+    if args.sin and args.next: #if "next" command used w/out ACCU
+        print("'Next' option is for Accuweather or RP5. Please, type -a or -r to choose provider.")
 
     return args
 
@@ -386,7 +419,7 @@ def run_app(*args, provider, forec):
     try:
         URL_next_day = provider['URL_next_day']
     except KeyError:
-        URL_hourly = provider['URL']
+        URL_next_day = provider['URL']
 
     raw_page = get_raw_page(URL) #load a page
     if title == 'Accuweather':
@@ -404,11 +437,18 @@ def run_app(*args, provider, forec):
                 weather_info.update(info_hourly) #update with forecast
 
     elif title == 'RP5':
-        weather_info = get_rp5_info(raw_page) #extract data from a page
-        if forec:
-            raw_page = get_raw_page(URL_hourly) #load forecast
-            info_hourly = get_rp5_hourly(raw_page) #run if forecast called
-            weather_info.update(info_hourly) #update with forecast
+
+        if args[0].next:
+            raw_page = get_raw_page(URL_next_day)
+            info_next_day = get_rp5_next_day(raw_page)
+            weather_info.update(info_next_day) #update with forecast
+
+        if not args[0].next:
+            weather_info = get_rp5_info(raw_page) #extract data from a page
+            if forec:
+                raw_page = get_raw_page(URL_hourly) #load forecast
+                info_hourly = get_rp5_hourly(raw_page) #run if forecast called
+                weather_info.update(info_hourly) #update with forecast
 
     elif title == 'Sinoptik':
         weather_info = get_sinoptik_info(raw_page) #extract data from a page
