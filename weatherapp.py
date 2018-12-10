@@ -249,6 +249,28 @@ def get_sinoptik_hourly(raw_page):
 
     return weather_info
 
+def get_sinoptik_next_day(raw_page):
+    """ Extracts weather info for next day
+        returns info in dictionary: Temperature, Condition, RealFeel
+    """
+    weather_info = {}
+
+    soup = BeautifulSoup(raw_page, 'html.parser')
+    next_day_block = soup.find('div', id="bd2")
+    regex = "weatherIco.*" #there is different weather icons for condition
+    next_day_cond = next_day_block.find('div', class_=re.compile(regex))
+    weather_info['Next_day_condition'] = str(next_day_cond.attrs['title'])
+    #find max temperature
+    Next_day_temp = next_day_block.find('div', class_="max")
+    Next_day_temp = Next_day_temp.find('span').string
+    weather_info['Next_day_temp_max'] = int(Next_day_temp[:-1])
+    #Find min temp
+    Next_day_temp = next_day_block.find('div', class_="min")
+    Next_day_temp = Next_day_temp.find('span').string
+    weather_info['Next_day_temp_min'] = int(Next_day_temp[:-1])
+
+    return weather_info
+
 """ Output functions """
 def print_weather(output_data, title):
     """
@@ -400,8 +422,6 @@ def take_args():
 
     if args.noforec:
         args.forec = False #set forecast not to show
-    if args.sin and args.next: #if "next" command used w/out ACCU
-        print("'Next' option is for Accuweather or RP5. Please, type -a or -r to choose provider.")
 
     return args
 
@@ -451,11 +471,18 @@ def run_app(*args, provider, forec):
                 weather_info.update(info_hourly) #update with forecast
 
     elif title == 'Sinoptik':
-        weather_info = get_sinoptik_info(raw_page) #extract data from a page
-        if forec:
-            raw_page = get_raw_page(URL_hourly) #load forecast
-            info_hourly = get_sinoptik_hourly(raw_page) #run if forecast called
-            weather_info.update(info_hourly) #update with forecast
+
+        if args[0].next:
+            raw_page = get_raw_page(URL_next_day)
+            info_next_day = get_sinoptik_next_day(raw_page)
+            weather_info.update(info_next_day)
+
+        if not args[0].next:
+            weather_info = get_sinoptik_info(raw_page) #extract data from a page
+            if forec:
+                raw_page = get_raw_page(URL_hourly) #load forecast
+                info_hourly = get_sinoptik_hourly(raw_page) #run if forecast called
+                weather_info.update(info_hourly) #update with forecast
 
     output_data = make_printable(weather_info) #create printable
     print_weather(output_data, title) #print weather info on a screen
