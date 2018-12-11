@@ -10,12 +10,14 @@ import sys
 import argparse
 
 
+
 """ Define global params """
 weather_providers = {
 'ACCU': {'Title': 'Accuweather',
         'URL': "https://www.accuweather.com/uk/ua/kyiv/324505/weather-forecast/324505",
         'URL_hourly': "https://www.accuweather.com/uk/ua/kyiv/324505/hourly-weather-forecast/324505",
-        'URL_next_day': "https://www.accuweather.com/uk/ua/kyiv/324505/daily-weather-forecast/324505?day=2"
+        'URL_next_day': "https://www.accuweather.com/uk/ua/kyiv/324505/daily-weather-forecast/324505?day=2",
+        'URL_regions': "https://www.accuweather.com/uk/browse-locations"
         },
 'RP5': {'Title': 'RP5',
         'URL': "http://rp5.ua/%D0%9F%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0_%D0%B2_%D0%9A%D0%B8%D1%94%D0%B2%D1%96",
@@ -270,6 +272,150 @@ def get_sinoptik_next_day(raw_page):
 
     return weather_info
 
+""" Location functions """
+
+def get_current_location_accu(raw_page):
+    """ Returns current location of Accuweather
+        with corresponding links
+        Prints City, Country and Region
+    """
+
+    """ REMOVE ??? """
+    accu_location = {}
+
+    soup = BeautifulSoup(raw_page, 'html.parser')
+    location_ul = soup.find('ul', id="country-breadcrumbs")
+    #location_list = location_ul.find_all('li')
+
+    return accu_city, accu_country, accu_region
+
+def get_city_accu(raw_page):
+    """ Returns list of cities of a Country
+        with corresponding links
+        Input: page with list of cities
+    """
+
+    cities_list = {}
+
+    soup = BeautifulSoup(raw_page, 'html.parser')
+
+    raw_list = soup.find('ul', class_="articles")
+    raw_list = raw_list.find_all('a')
+    for item in raw_list:
+        cities_list[item.get_text()] = item.attrs['href']
+
+    return cities_list
+
+def get_region_accu(raw_page):
+    """ Returns list of regions
+        with corresponding links
+        Input: page with list of regions
+    """
+
+    region_list = {}
+
+    soup = BeautifulSoup(raw_page, 'html.parser')
+
+    raw_list = soup.find('ul', class_="articles")
+    raw_list = raw_list.find_all('a')
+    for item in raw_list:
+        region_list[item.get_text()] = item.attrs['href']
+
+    print(region_list)
+
+    return region_list
+
+def get_country_accu(raw_page):
+    """ Returns list of countries
+        with corresponding links
+        Input: page with list of countries
+    """
+    countries_list = {}
+
+    soup = BeautifulSoup(raw_page, 'html.parser')
+
+    raw_list = soup.find('ul', class_="articles")
+    raw_list = raw_list.find_all('a')
+    for item in raw_list:
+        countries_list[item.get_text()] = item.attrs['href']
+
+    return countries_list
+
+def get_continent_accu(raw_page):
+    """ Returns list of continents
+        with corresponding links
+        Input: page with list of regions
+    """
+    continent_list = {}
+
+    soup = BeautifulSoup(raw_page, 'html.parser')
+
+    raw_list = soup.find('ul', class_="articles")
+    raw_list = raw_list.find_all('a')
+    for item in raw_list:
+        continent_list[item.get_text()] = item.attrs['href']
+
+    return continent_list
+
+def set_location_accu():
+    """ Helps to choose location
+        Saves location to config file """
+
+    URL_regions = weather_providers['ACCU']['URL_regions']
+
+    raw_page = ''
+    continents = {}
+    countries = {}
+    regions = {}
+    cities = {}
+
+    raw_page = get_raw_page(URL_regions)
+    regions = get_continent_accu(raw_page)
+
+    for item in regions:
+        print(item)
+
+    choice = input("Введіть назву континенту:\n")
+    print('\n')
+
+    raw_page = get_raw_page(regions[choice])
+    countries = get_country_accu(raw_page)
+
+    for item in countries:
+        print(item)
+
+    choice = input("Введіть назву країни:\n")
+
+    raw_page = get_raw_page(countries[choice])
+    regions = get_region_accu(raw_page)
+
+    for item in regions:
+        print(item)
+
+    choice = input("Введіть регіон:\n")
+
+    raw_page = get_raw_page(regions[choice])
+    cities = get_city_accu(raw_page)
+
+    for item in cities:
+        print(item)
+
+    choice = input("Введіть назву міста:\n")
+
+    weather_providers['ACCU']['URL'] = cities[choice]
+    #let change other URLs
+    url_string = cities[choice]
+    regex = "weather-forecast"
+
+    weather_providers['ACCU']['URL_hourly'] = \
+                        re.sub(regex, 'hourly-weather-forecast', url_string) #make it for hourly forecast
+    weather_providers['ACCU']['URL_next_day'] = \
+                        re.sub(regex, 'daily-weather-forecast', url_string) #make for next day forecast
+    weather_providers['ACCU']['URL_next_day'] += "?day=2" #add second day notation to the end
+
+def load_location_accu():
+    """ Loads location from file """
+
 """ Output functions """
 def print_weather(output_data, title):
     """
@@ -404,6 +550,8 @@ def take_args():
                         action="store_true")
     parser.add_argument("-next", help="Next day forecast (ACCU only)",
                         action="store_true")
+    parser.add_argument("-loc", help="Browse and set location. ACCU only.",
+                        action="store_true")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-f", "--forec", help="Display forecast for next hours",
                         action="store_true", default=True)
@@ -444,8 +592,13 @@ def run_app(*args, provider, forec):
     except KeyError:
         URL_next_day = provider['URL']
 
+
     raw_page = get_raw_page(URL) #load a page
     if title == 'Accuweather':
+
+        if args[0].loc:
+            set_location_accu()
+            URL = provider['URL']
 
         if args[0].next:
             raw_page = get_raw_page(URL_next_day) #load forecast
@@ -491,9 +644,9 @@ def run_app(*args, provider, forec):
         title = title + ", прогноз на завтра"
     else:
         title = title + ", поточна погода"
+
     output_data = make_printable(weather_info) #create printable
     print_weather(output_data, title) #print weather info on a screen
-
     """ save loaded data """
     ACTUAL_WEATHER_INFO[title] = weather_info
     ACTUAL_PRINTABLE_INFO[title] = nice_output(output_data, title)
