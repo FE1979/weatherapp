@@ -10,15 +10,14 @@ import sys
 import argparse
 import configparser
 
-
-
 """ Define global params """
 weather_providers = {
 'ACCU': {'Title': 'Accuweather',
         'URL': "https://www.accuweather.com/uk/ua/kyiv/324505/weather-forecast/324505",
         'URL_hourly': "https://www.accuweather.com/uk/ua/kyiv/324505/hourly-weather-forecast/324505",
         'URL_next_day': "https://www.accuweather.com/uk/ua/kyiv/324505/daily-weather-forecast/324505?day=2",
-        'URL_regions': "https://www.accuweather.com/uk/browse-locations"
+        'URL_regions': "https://www.accuweather.com/uk/browse-locations",
+        'Location': []
         },
 'RP5': {'Title': 'RP5',
         'URL': "http://rp5.ua/%D0%9F%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0_%D0%B2_%D0%9A%D0%B8%D1%94%D0%B2%D1%96",
@@ -32,6 +31,19 @@ ACTUAL_WEATHER_INFO = {}
 ACTUAL_PRINTABLE_INFO = {}
 
 """ End of global params """
+
+""" Config settings and fuctions """
+config = configparser.ConfigParser()
+
+config['DEFAULT'] = {'Continent': '', 'Country': '', 'Region': '', 'City': ''}
+
+def save_config(config):
+    with open('weather_config.ini', 'w') as f:
+        config.write(f)
+
+def load_config():
+    with open('weather_config.ini', 'r') as f:
+        config.read(f)
 
 """ Page loading and scraping functions """
 def get_raw_page(URL):
@@ -604,6 +616,13 @@ def run_app(*args, provider, forec):
             location = []
             print('Current location:')
             location = get_current_location_accu(raw_page)
+            #save location
+            config['DEFAULT']['Continent'] = location[0]
+            config['DEFAULT']['Country'] = location[1]
+            config['DEFAULT']['Region'] = location[2]
+            config['DEFAULT']['City'] = location[3]
+            save_config(config)
+            
             for item in location:
                 print(item, end=" ")
             print('\n') #new line
@@ -666,6 +685,8 @@ def run_app(*args, provider, forec):
     pass
 
 def main():
+
+    #load_config()
     args = take_args()
 
     if args.accu:
