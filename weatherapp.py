@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 import re
 import sys
 import argparse
+import configparser
 
 
 
@@ -277,17 +278,20 @@ def get_sinoptik_next_day(raw_page):
 def get_current_location_accu(raw_page):
     """ Returns current location of Accuweather
         with corresponding links
-        Prints City, Country and Region
+        Prints City, Region, Country and Continent
     """
 
-    """ REMOVE ??? """
-    accu_location = {}
+    accu_location = []
 
     soup = BeautifulSoup(raw_page, 'html.parser')
     location_ul = soup.find('ul', id="country-breadcrumbs")
-    #location_list = location_ul.find_all('li')
+    location = location_ul.find_all('a')
 
-    return accu_city, accu_country, accu_region
+    for item in location:
+        if item.attrs['href'] is not None:
+            accu_location.append(item.get_text())
+
+    return accu_location
 
 def get_city_accu(raw_page):
     """ Returns list of cities of a Country
@@ -320,8 +324,6 @@ def get_region_accu(raw_page):
     raw_list = raw_list.find_all('a')
     for item in raw_list:
         region_list[item.get_text()] = item.attrs['href']
-
-    print(region_list)
 
     return region_list
 
@@ -403,6 +405,7 @@ def set_location_accu():
     choice = input("Введіть назву міста:\n")
 
     weather_providers['ACCU']['URL'] = cities[choice]
+    print(weather_providers['ACCU']['URL'])
     #let change other URLs
     url_string = cities[choice]
     regex = "weather-forecast"
@@ -597,8 +600,17 @@ def run_app(*args, provider, forec):
     if title == 'Accuweather':
 
         if args[0].loc:
+            #define current location of User
+            location = []
+            print('Current location:')
+            location = get_current_location_accu(raw_page)
+            for item in location:
+                print(item, end=" ")
+            print('\n') #new line
+
             set_location_accu()
             URL = provider['URL']
+            raw_page = get_raw_page(URL)
 
         if args[0].next:
             raw_page = get_raw_page(URL_next_day) #load forecast
