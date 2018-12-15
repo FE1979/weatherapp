@@ -16,8 +16,8 @@ weather_providers = {
         'URL': "https://www.accuweather.com/uk/ua/kyiv/324505/weather-forecast/324505",
         'URL_hourly': "https://www.accuweather.com/uk/ua/kyiv/324505/hourly-weather-forecast/324505",
         'URL_next_day': "https://www.accuweather.com/uk/ua/kyiv/324505/daily-weather-forecast/324505?day=2",
-        'URL_regions': "https://www.accuweather.com/uk/browse-locations",
-        'Location': []
+        'Location': 'Київ',
+        'URL_locations': "https://www.accuweather.com/uk/browse-locations"
         },
 'RP5': {'Title': 'RP5',
         'URL': "http://rp5.ua/%D0%9F%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0_%D0%B2_%D0%9A%D0%B8%D1%94%D0%B2%D1%96",
@@ -27,6 +27,8 @@ weather_providers = {
         }
 }
 
+ACCU_Location = {}
+
 ACTUAL_WEATHER_INFO = {}
 ACTUAL_PRINTABLE_INFO = {}
 
@@ -35,15 +37,21 @@ ACTUAL_PRINTABLE_INFO = {}
 """ Config settings and fuctions """
 config = configparser.ConfigParser()
 
-config['DEFAULT'] = {'Continent': '', 'Country': '', 'Region': '', 'City': ''}
+config['DEFAULT'] = {}
+config['ACCU'] = {'Title': 'Accuweather',
+        'URL': "https://www.accuweather.com/uk/ua/kyiv/324505/weather-forecast/324505",
+        'URL_hourly': "https://www.accuweather.com/uk/ua/kyiv/324505/hourly-weather-forecast/324505",
+        'URL_next_day': "https://www.accuweather.com/uk/ua/kyiv/324505/daily-weather-forecast/324505?day=2",
+        'Location': 'Київ',
+        'URL_locations': "https://www.accuweather.com/uk/browse-locations"
+        }
 
 def save_config(config):
     with open('weather_config.ini', 'w') as f:
         config.write(f)
 
 def load_config():
-    with open('weather_config.ini', 'r') as f:
-        config.read(f)
+    config.read('weather_config.ini')
 
 """ Page loading and scraping functions """
 def get_raw_page(URL):
@@ -288,6 +296,7 @@ def get_sinoptik_next_day(raw_page):
 """ Location functions """
 
 def get_current_location_accu(raw_page):
+
     """ Returns current location of Accuweather
         with corresponding links
         Prints City, Region, Country and Continent
@@ -303,133 +312,54 @@ def get_current_location_accu(raw_page):
         if item.attrs['href'] is not None:
             accu_location.append(item.get_text())
 
-    return accu_location
+    return accu_location#""" НЕ ПОтРІБНА"""
 
-def get_city_accu(raw_page):
-    """ Returns list of cities of a Country
-        with corresponding links
-        Input: page with list of cities
+def browse_location_accu(level = 0, URL_location = weather_providers['ACCU']['URL_locations']):
+    """ Browse recursively locations of ACCU
+        Starts from continents
+        defaults: level = 0: continent level
+                  URL_location: page with continents
+        Each next call with new URL and level + 1
+        Returns collection of URLs: URL (current weather), URL_hourly and URL_next_day
     """
 
-    cities_list = {}
+    levels = ['continent', 'country', 'region', 'city'] #for user input and level check
+    raw_page = get_raw_page(URL_location) #read locations
+    locations_list = {} #locations associated with their urls
+    location_set = {} #result of func
 
-    soup = BeautifulSoup(raw_page, 'html.parser')
+    soup = BeautifulSoup(raw_page, 'html.parser') #parse page
+    raw_list = soup.find('ul', class_="articles") #find list of locations
+    raw_list = raw_list.find_all('a') #take all links in list of locations
 
-    raw_list = soup.find('ul', class_="articles")
-    raw_list = raw_list.find_all('a')
-    for item in raw_list:
-        cities_list[item.get_text()] = item.attrs['href']
+    for item in raw_list: #associate location with ulr
+        locations_list[item.get_text()] = item.attrs['href']
 
-    return cities_list
-
-def get_region_accu(raw_page):
-    """ Returns list of regions
-        with corresponding links
-        Input: page with list of regions
-    """
-
-    region_list = {}
-
-    soup = BeautifulSoup(raw_page, 'html.parser')
-
-    raw_list = soup.find('ul', class_="articles")
-    raw_list = raw_list.find_all('a')
-    for item in raw_list:
-        region_list[item.get_text()] = item.attrs['href']
-
-    return region_list
-
-def get_country_accu(raw_page):
-    """ Returns list of countries
-        with corresponding links
-        Input: page with list of countries
-    """
-    countries_list = {}
-
-    soup = BeautifulSoup(raw_page, 'html.parser')
-
-    raw_list = soup.find('ul', class_="articles")
-    raw_list = raw_list.find_all('a')
-    for item in raw_list:
-        countries_list[item.get_text()] = item.attrs['href']
-
-    return countries_list
-
-def get_continent_accu(raw_page):
-    """ Returns list of continents
-        with corresponding links
-        Input: page with list of regions
-    """
-    continent_list = {}
-
-    soup = BeautifulSoup(raw_page, 'html.parser')
-
-    raw_list = soup.find('ul', class_="articles")
-    raw_list = raw_list.find_all('a')
-    for item in raw_list:
-        continent_list[item.get_text()] = item.attrs['href']
-
-    return continent_list
-
-def set_location_accu():
-    """ Helps to choose location
-        Saves location to config file """
-
-    URL_regions = weather_providers['ACCU']['URL_regions']
-
-    raw_page = ''
-    continents = {}
-    countries = {}
-    regions = {}
-    cities = {}
-
-    raw_page = get_raw_page(URL_regions)
-    regions = get_continent_accu(raw_page)
-
-    for item in regions:
+    for item in locations_list: #print out locations
         print(item)
 
-    choice = input("Введіть назву континенту:\n")
-    print('\n')
+    choice = input(f"Enter {levels[level]} name:\n") #user input
 
-    raw_page = get_raw_page(regions[choice])
-    countries = get_country_accu(raw_page)
+    #call this function again with new locations
+    if level <3:
+        level +=1
+        location_set = browse_location_accu(level, URL_location = locations_list[choice])
 
-    for item in countries:
-        print(item)
+    if level == 3:
+        location_set['URL'] = locations_list[choice]
+        #print(weather_providers['ACCU']['URL'])
+        #let change other URLs
+        url_string = locations_list[choice]
+        regex = "weather-forecast"
 
-    choice = input("Введіть назву країни:\n")
+        location_set['URL_hourly'] = \
+                            re.sub(regex, 'hourly-weather-forecast', url_string) #make it for hourly forecast
+        location_set['URL_next_day'] = \
+                            re.sub(regex, 'daily-weather-forecast', url_string) #make for next day forecast
+        location_set['URL_next_day'] += "?day=2" #add second day notation to the end
+        location_set['Location'] = choice
 
-    raw_page = get_raw_page(countries[choice])
-    regions = get_region_accu(raw_page)
-
-    for item in regions:
-        print(item)
-
-    choice = input("Введіть регіон:\n")
-
-    raw_page = get_raw_page(regions[choice])
-    cities = get_city_accu(raw_page)
-
-    for item in cities:
-        print(item)
-
-    choice = input("Введіть назву міста:\n")
-
-    weather_providers['ACCU']['URL'] = cities[choice]
-    print(weather_providers['ACCU']['URL'])
-    #let change other URLs
-    url_string = cities[choice]
-    regex = "weather-forecast"
-
-    weather_providers['ACCU']['URL_hourly'] = \
-                        re.sub(regex, 'hourly-weather-forecast', url_string) #make it for hourly forecast
-    weather_providers['ACCU']['URL_next_day'] = \
-                        re.sub(regex, 'daily-weather-forecast', url_string) #make for next day forecast
-    weather_providers['ACCU']['URL_next_day'] += "?day=2" #add second day notation to the end
-
-def load_location_accu():
-    """ Loads location from file """
+    return location_set
 
 """ Output functions """
 def print_weather(output_data, title):
@@ -614,22 +544,20 @@ def run_app(*args, provider, forec):
         if args[0].loc:
             #define current location of User
             location = []
-            print('Current location:')
+            print('Your current location:')
             location = get_current_location_accu(raw_page)
-            #save location
-            config['DEFAULT']['Continent'] = location[0]
-            config['DEFAULT']['Country'] = location[1]
-            config['DEFAULT']['Region'] = location[2]
-            config['DEFAULT']['City'] = location[3]
-            save_config(config)
-            
+
             for item in location:
                 print(item, end=" ")
             print('\n') #new line
 
-            set_location_accu()
-            URL = provider['URL']
-            raw_page = get_raw_page(URL)
+            #set_location_accu()
+            location_set = browse_location_accu()
+            weather_providers['ACCU']['URL'] = location_set['URL']
+            weather_providers['ACCU']['URL_hourly'] = location_set['URL_hourly']
+            weather_providers['ACCU']['URL_next_day'] = location_set['URL_next_day']
+            weather_providers['ACCU']['Location'] = location_set['Location']
+            #set confing
 
         if args[0].next:
             raw_page = get_raw_page(URL_next_day) #load forecast
@@ -686,7 +614,8 @@ def run_app(*args, provider, forec):
 
 def main():
 
-    #load_config()
+    load_config()
+
     args = take_args()
 
     if args.accu:
@@ -699,6 +628,9 @@ def main():
         save_csv(ACTUAL_WEATHER_INFO, args.csv)
     if args.save:
         save_txt(ACTUAL_PRINTABLE_INFO, args.save)
+
+    save_config(config)
+
 
 if __name__ == "__main__":
     main()
