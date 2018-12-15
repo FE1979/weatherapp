@@ -3,6 +3,7 @@ Test project
 """
 
 from urllib.request import urlopen, Request
+from urllib.parse import quote
 from html import escape, unescape
 from bs4 import BeautifulSoup
 import re
@@ -24,6 +25,8 @@ weather_providers = {
         },
 'Sinoptik': {'Title': 'Sinoptik',
         'URL': "https://ua.sinoptik.ua/%D0%BF%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0-%D0%BA%D0%B8%D1%97%D0%B2",
+        'Location': 'Київ',
+        'URL_locations': "https://ua.sinoptik.ua/%D0%BF%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0-%D1%94%D0%B2%D1%80%D0%BE%D0%BF%D0%B0"
         }
 }
 
@@ -312,7 +315,7 @@ def get_current_location_accu(raw_page):
         if item.attrs['href'] is not None:
             accu_location.append(item.get_text())
 
-    return accu_location#""" НЕ ПОтРІБНА"""
+    return accu_location
 
 def browse_location_accu(level = 0, URL_location = weather_providers['ACCU']['URL_locations']):
     """ Browse recursively locations of ACCU
@@ -342,12 +345,11 @@ def browse_location_accu(level = 0, URL_location = weather_providers['ACCU']['UR
 
     #call this function again with new locations
     if level <3:
-        level +=1
-        location_set = browse_location_accu(level, URL_location = locations_list[choice])
+
+        location_set = browse_location_accu(level+1, URL_location = locations_list[choice])
 
     if level == 3:
         location_set['URL'] = locations_list[choice]
-        #print(weather_providers['ACCU']['URL'])
         #let change other URLs
         url_string = locations_list[choice]
         regex = "weather-forecast"
@@ -357,6 +359,73 @@ def browse_location_accu(level = 0, URL_location = weather_providers['ACCU']['UR
         location_set['URL_next_day'] = \
                             re.sub(regex, 'daily-weather-forecast', url_string) #make for next day forecast
         location_set['URL_next_day'] += "?day=2" #add second day notation to the end
+        location_set['Location'] = choice
+
+    return location_set
+
+def browse_location_sinoptik(level = 0, URL_location = weather_providers['Sinoptik']['URL_locations']):
+    """ Browse recursively locations of Sinoptik
+        Starts from continents
+        defaults: level = 0: continent level
+                  URL_location: page with continents, Europe by default
+        Each next call with new URL and level + 1
+        Returns: URL (current weather), name of Location
+    """
+
+    levels = ['continent', 'country', 'region', 'city'] #for user input and level check
+    raw_page = get_raw_page(URL_location) #read locations
+    locations_list = {} #locations associated with their urls
+    location_set = {} #result of func
+
+    if level == 0: #continents and countries are on same page so if we are on 0 level we should print continents
+        soup = BeautifulSoup(raw_page, 'html.parser') #parse page
+        raw_list = soup.find('div', class_="mapRightCol") #find list of locations
+        raw_list = raw_list.find('div') #take first div
+        raw_list = raw_list.find_all('a') #take all links in list of locations
+
+        for item in raw_list: #associate location with ulr
+            url_decoded = quote(item.attrs['href'])
+            locations_list[item.get_text()] = "https:" + url_decoded
+
+        for item in locations_list: #print out locations
+            print(item)
+
+    if level == 1 or level == 2: #if country or region level
+        soup = BeautifulSoup(raw_page, 'html.parser') #parse page
+        raw_list = soup.find('div', class_="maxHeight") #find list of locations
+
+        raw_list = raw_list.find('div') #take first div
+        raw_list = raw_list.find_all('a') #take all links in list of locations
+
+        for item in raw_list: #associate location with ulr
+            url_decoded = quote(item.attrs['href'])
+            locations_list[item.get_text()] = "https:" + url_decoded
+
+        for item in locations_list: #print out locations
+            print(item)
+
+    if level == 3: #if city level
+        soup = BeautifulSoup(raw_page, 'html.parser') #parse page
+        raw_list = soup.find('div', class_="mapBotCol") #find list of locations
+        raw_list = raw_list.find('div', class_="clearfix")
+        raw_list = raw_list.find_all('a') #take all links in list of locations
+        print(raw_list)
+        for item in raw_list: #associate location with ulr
+            url_decoded = quote(item.attrs['href'])
+            locations_list[item.get_text()] = "https:" + url_decoded
+
+        for item in locations_list: #print out locations
+            print(item)
+
+    choice = input(f"Enter {levels[level]} name:\n") #user input
+
+    if level != 3:
+        #call this function again with new locations
+
+        location_set = browse_location_sinoptik(level+1, locations_list[choice])
+
+    if level == 3:
+        location_set['URL'] = locations_list[choice]
         location_set['Location'] = choice
 
     return location_set
@@ -536,11 +605,6 @@ def run_app(*args, provider, forec):
         URL_next_day = provider['URL_next_day']
     except KeyError:
         URL_next_day = provider['URL']
-    try:
-        city = provider['Location']
-    except KeyError:
-        city = ''
-
 
     raw_page = get_raw_page(URL) #load a page
     if title == 'Accuweather':
@@ -555,7 +619,6 @@ def run_app(*args, provider, forec):
                 print(item, end=" ")
             print('\n') #new line
 
-            #set_location_accu()
             location_set = browse_location_accu()
             weather_providers['ACCU']['URL'] = location_set['URL']
             weather_providers['ACCU']['URL_hourly'] = location_set['URL_hourly']
@@ -591,6 +654,18 @@ def run_app(*args, provider, forec):
 
     elif title == 'Sinoptik':
 
+        if args[0].loc:
+            #define current location of User
+            location = []
+            print(f"Your current location:\n{weather_providers['Sinoptik']['Location']}\n")
+
+            #set_location_accu()
+            location_set = browse_location_sinoptik()
+            weather_providers['Sinoptik']['URL'] = location_set['URL']
+            weather_providers['Sinoptik']['Location'] = location_set['Location']
+            print(weather_providers['Sinoptik'])
+            #set confing
+
         if args[0].next:
             raw_page = get_raw_page(URL_next_day)
             info_next_day = get_sinoptik_next_day(raw_page)
@@ -602,6 +677,11 @@ def run_app(*args, provider, forec):
                 raw_page = get_raw_page(URL_hourly) #load forecast
                 info_hourly = get_sinoptik_hourly(raw_page) #run if forecast called
                 weather_info.update(info_hourly) #update with forecast
+
+    try:
+        city = provider['Location']
+    except KeyError:
+        city = ''
 
     if args[0].next:
         title = title + ", прогноз на завтра, " + city
