@@ -536,6 +536,10 @@ def run_app(*args, provider, forec):
         URL_next_day = provider['URL_next_day']
     except KeyError:
         URL_next_day = provider['URL']
+    try:
+        city = provider['Location']
+    except KeyError:
+        city = ''
 
 
     raw_page = get_raw_page(URL) #load a page
@@ -600,9 +604,9 @@ def run_app(*args, provider, forec):
                 weather_info.update(info_hourly) #update with forecast
 
     if args[0].next:
-        title = title + ", прогноз на завтра"
+        title = title + ", прогноз на завтра, " + city
     else:
-        title = title + ", поточна погода"
+        title = title + ", поточна погода, " + city
 
     output_data = make_printable(weather_info) #create printable
     print_weather(output_data, title) #print weather info on a screen
