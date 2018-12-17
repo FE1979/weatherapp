@@ -4,6 +4,7 @@ Test project
 
 from urllib.request import urlopen, Request
 from urllib.parse import quote
+from urllib import parse
 from html import escape, unescape
 from bs4 import BeautifulSoup
 import re
@@ -22,6 +23,8 @@ weather_providers = {
         },
 'RP5': {'Title': 'RP5',
         'URL': "http://rp5.ua/%D0%9F%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0_%D0%B2_%D0%9A%D0%B8%D1%94%D0%B2%D1%96",
+        'Location': 'Київ',
+        'URL_locations': "http://rp5.ua/%D0%9F%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0_%D0%B2_%D1%81%D0%B2%D1%96%D1%82%D1%96"
         },
 'Sinoptik': {'Title': 'Sinoptik',
         'URL': "https://ua.sinoptik.ua/%D0%BF%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0-%D0%BA%D0%B8%D1%97%D0%B2",
@@ -194,7 +197,7 @@ def get_rp5_hourly(raw_page):
         if t_0 is not None: #if there is such div
             t = str(t_0.get_text()) #get text from it
             table_data.append(int(t)) #and append to data
-    
+
     weather_info['Max'] = max(table_data)
     weather_info['Min'] = min(table_data)
     weather_info['Av'] = sum(table_data) / len(table_data)
@@ -431,6 +434,80 @@ def browse_location_sinoptik(level = 0, URL_location = weather_providers['Sinopt
 
     return location_set
 
+def browse_location_rp5(level = 0, URL_location = weather_providers['RP5']['URL_locations'] ):
+    """ Browse recursively locations of RP5
+        Starts from all countries
+        defaults: level = 0: country level
+                  URL_location: page with countries
+        Each next call with new URL and level + 1
+        Returns: URL (current weather), name of Location
+    """
+
+    levels = ['country', 'region', 'city'] #for user input and level check
+    location_set = {}
+    locations_list = {} #locations associated with their urls
+    raw_page = get_raw_page(URL_location) #read locations
+
+    soup = BeautifulSoup(raw_page, 'lxml') #parse page
+    table = soup.find('div', class_="countryMap") #find table
+
+    if level == 0: #it only exists on country level
+        links = table.find_all('div', class_="country_map_links") #get all links
+
+        for item in links:
+            link = item.find('a') #extract urls
+            url_decoded = quote(link.attrs['href']) #decode
+            locations_list[link.get_text()] = "http://rp5.ua" + url_decoded #sve to the table
+
+        for item in locations_list: #print out locations
+            print(item, locations_list[item])
+
+    if level == 1:
+        links = table.find_all('a', class_='href12') #get all links
+
+        for item in links:
+            url_decoded = quote(item.attrs['href']) #decode
+            locations_list[item.attrs['title']] = "http://rp5.ua/" + url_decoded #sve to the table
+
+        for item in locations_list: #print out locations
+            print(item, locations_list[item])
+
+    if level == 2:
+        links = table.find_all('a') #get all links
+
+        for item in links:
+            url_decoded = quote(item.attrs['href']) #decode
+            locations_list[item.get_text()] = "http://rp5.ua/" + url_decoded #sve to the table
+
+        for item in locations_list: #print out locations
+            print(item, locations_list[item])
+
+    choice = input(f"Enter {levels[level]} name:\n") #user input
+
+    if level <2: #if not city level
+        print(locations_list[choice])
+        location_set = browse_location_rp5(level+1, locations_list[choice])
+
+    if level == 2: #final if city level
+        location_set['URL'] = locations_list[choice]
+        location_set['Location'] = choice
+
+    return location_set
+
+def search_location_rp5():
+    """ Searches location typed by user through RP5 """
+
+    location_search = input("Type location to search\n")
+    data = location_search.encode('utf-8')
+
+    URL_search = weather_providers['RP5']['URL_search']
+    HEAD_search = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:63.0) Gecko/201'}
+    SEARCH_REQUEST = Request(URL_search, data = data, headers = HEAD_search)
+    PAGE_SEARCH = urlopen(SEARCH_REQUEST).read()
+    PAGE_SEARCH = str(PAGE_SEARCH, encoding = 'utf-8')
+
+    print(PAGE_SEARCH)
+
 """ Output functions """
 def print_weather(output_data, title):
     """
@@ -640,6 +717,16 @@ def run_app(*args, provider, forec):
                 weather_info.update(info_hourly) #update with forecast
 
     elif title == 'RP5':
+
+        if args[0].loc:
+            location = []
+            print(f"Your current location:\n{weather_providers['RP5']['Location']}\n")
+
+            #set_location_accu()
+            location_set = browse_location_rp5()
+            weather_providers['RP5']['URL'] = location_set['URL']
+            weather_providers['RP5']['Location'] = location_set['Location']
+            print(weather_providers['RP5'])
 
         if args[0].next:
             raw_page = get_raw_page(URL_next_day)
