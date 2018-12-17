@@ -188,12 +188,13 @@ def get_rp5_hourly(raw_page):
     table = soup.find('table', id='forecastTable_1') #get table
     table = table.find_all('tr') #take all rows
     td = list(table)[5].find_all('td') #take row with temperature
-    for item in td: # for each item in row...
-        t_0 = item.find_all('div', class_='t_0') #find items with temperature
-        for i in t_0: # for each item with temp
-            t = str(i.find('b').get_text()) #get text from it
-            table_data.append(int(t))
+    for item in td:
 
+        t_0 = item.find('div', class_='t_0') #find div with temperature
+        if t_0 is not None: #if there is such div
+            t = str(t_0.get_text()) #get text from it
+            table_data.append(int(t)) #and append to data
+    
     weather_info['Max'] = max(table_data)
     weather_info['Min'] = min(table_data)
     weather_info['Av'] = sum(table_data) / len(table_data)
