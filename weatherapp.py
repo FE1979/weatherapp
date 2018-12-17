@@ -159,7 +159,15 @@ def get_rp5_info(raw_page):
 
     RealFeel_block = soup.find('table', id='forecastTable_1') #take table with short hourly description
     RealFeel_block = RealFeel_block.find_all('tr') #take all rows
-    RealFeel_block = list(RealFeel_block)[6].find_all('td') #take all columns in 6th row
+    #find row index with RealFeel
+    for item in RealFeel_block:
+        id = item.find('a', id="f_temperature")
+        if id is None:
+            pass
+        else:
+            index_RF = RealFeel_block.index(item)
+
+    RealFeel_block = list(RealFeel_block)[index_RF].find_all('td') #take all columns in 6th row
     RealFeel_block = list(RealFeel_block)[1] #select 2nd col
     RF_text = str(list(RealFeel_block.children)[1].get_text()) # and make it string
 
@@ -190,7 +198,15 @@ def get_rp5_hourly(raw_page):
 
     table = soup.find('table', id='forecastTable_1') #get table
     table = table.find_all('tr') #take all rows
-    td = list(table)[5].find_all('td') #take row with temperature
+    #find row index with Temperature
+    for item in table:
+        id = item.find('a', id="t_temperature")
+        if id is None:
+            pass
+        else:
+            index_T = table.index(item)
+
+    td = list(table)[index_T].find_all('td') #take row with temperature
     for item in td:
 
         t_0 = item.find('div', class_='t_0') #find div with temperature
