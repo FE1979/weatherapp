@@ -3,12 +3,13 @@ Test project
 """
 
 from urllib.request import urlopen, Request
-from urllib.parse import quote
+from urllib.parse import quote, unquote
 from urllib import parse
 from html import escape, unescape
 from bs4 import BeautifulSoup
 import re
 import sys
+import pathlib
 import argparse
 import configparser
 
@@ -22,42 +23,86 @@ weather_providers = {
         'URL_locations': "https://www.accuweather.com/uk/browse-locations"
         },
 'RP5': {'Title': 'RP5',
-        'URL': "http://rp5.ua/%D0%9F%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0_%D0%B2_%D0%9A%D0%B8%D1%94%D0%B2%D1%96",
+        'URL': "http://rp5.ua/" + quote("Погода_в_Києві"),
         'Location': 'Київ',
-        'URL_locations': "http://rp5.ua/%D0%9F%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0_%D0%B2_%D1%81%D0%B2%D1%96%D1%82%D1%96"
+        'URL_locations': "http://rp5.ua/" + quote("Погода_в_світі")
         },
 'Sinoptik': {'Title': 'Sinoptik',
-        'URL': "https://ua.sinoptik.ua/%D0%BF%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0-%D0%BA%D0%B8%D1%97%D0%B2",
+        'URL': "https://ua.sinoptik.ua/" + quote("погода-київ"),
         'Location': 'Київ',
-        'URL_locations': "https://ua.sinoptik.ua/%D0%BF%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0-%D1%94%D0%B2%D1%80%D0%BE%D0%BF%D0%B0"
+        'URL_locations': "https://ua.sinoptik.ua/" + quote("погода-європа")
         }
 }
-
-ACCU_Location = {}
 
 ACTUAL_WEATHER_INFO = {}
 ACTUAL_PRINTABLE_INFO = {}
 
+config = configparser.ConfigParser()
+config.optionxform = str
+config_path = 'weather_config.ini'
+
 """ End of global params """
 
 """ Config settings and fuctions """
-config = configparser.ConfigParser()
-
-config['DEFAULT'] = {}
-config['ACCU'] = {'Title': 'Accuweather',
-        'URL': "https://www.accuweather.com/uk/ua/kyiv/324505/weather-forecast/324505",
-        'URL_hourly': "https://www.accuweather.com/uk/ua/kyiv/324505/hourly-weather-forecast/324505",
-        'URL_next_day': "https://www.accuweather.com/uk/ua/kyiv/324505/daily-weather-forecast/324505?day=2",
-        'Location': 'Київ',
-        'URL_locations': "https://www.accuweather.com/uk/browse-locations"
-        }
 
 def save_config(config):
+    """ Saves config to file with current values """
+
+    for item in weather_providers['ACCU']:
+        config['ACCU'][item] = weather_providers['ACCU'][item]
+
+    for item in weather_providers['Sinoptik']:
+        config['Sinoptik'][item] = unquote(weather_providers['Sinoptik'][item])
+    for item in weather_providers['RP5']:
+        config['RP5'][item] = unquote(weather_providers['RP5'][item])
+
     with open('weather_config.ini', 'w') as f:
         config.write(f)
 
 def load_config():
-    config.read('weather_config.ini')
+    """ Loads configuration
+    """
+    global weather_providers
+    global config_path
+
+    config.read(config_path)
+
+    for item in config['ACCU']:
+        weather_providers['ACCU'][item] = config['ACCU'][item]
+    for item in config['Sinoptik']:
+        weather_providers['Sinoptik'][item] = quote(config['Sinoptik'][item], safe='://')
+    for item in config['RP5']:
+        weather_providers['RP5'][item] = quote(config['RP5'][item], safe='://')
+    #cyrillic titles do not urllib.auote
+    weather_providers['RP5']['Location'] = config['RP5']['Location']
+    weather_providers['Sinoptik']['Location'] = config['Sinoptik']['Location']
+
+def restore_config():
+    """ Restores config with defaults """
+
+    config['DEFAULT'] = {}
+    config['ACCU'] = {}
+    config['Sinoptik'] = {}
+    config['RP5'] = {}
+
+    for item in weather_providers['ACCU']:
+        config['ACCU'][item] = weather_providers['ACCU'][item]
+    for item in weather_providers['Sinoptik']:
+        config['Sinoptik'][item] = unquote(weather_providers['Sinoptik'][item])
+    for item in weather_providers['RP5']:
+        config['RP5'][item] = unquote(weather_providers['RP5'][item])
+
+def initiate_config(config):
+    """ Initiates config
+        Sets weather_providers and other conf variables
+    """
+
+    path = pathlib.Path(config_path)
+
+    if not path.exists(): #create new config file with defaults
+        config = restore_config()
+    else:
+        config = load_config()
 
 """ Page loading and scraping functions """
 def get_raw_page(URL):
@@ -361,7 +406,7 @@ def browse_location_accu(level = 0, URL_location = weather_providers['ACCU']['UR
     for item in locations_list: #print out locations
         print(item)
 
-    choice = input(f"Enter {levels[level]} name:\n") #user input
+    choice = input(f"\nEnter {levels[level]} name:\n") #user input
 
     #call this function again with new locations
     if level <3:
@@ -437,7 +482,7 @@ def browse_location_sinoptik(level = 0, URL_location = weather_providers['Sinopt
         for item in locations_list: #print out locations
             print(item)
 
-    choice = input(f"Enter {levels[level]} name:\n") #user input
+    choice = input(f"\nEnter {levels[level]} name:\n") #user input
 
     if level != 3:
         #call this function again with new locations
@@ -476,7 +521,7 @@ def browse_location_rp5(level = 0, URL_location = weather_providers['RP5']['URL_
             locations_list[link.get_text()] = "http://rp5.ua" + url_decoded #sve to the table
 
         for item in locations_list: #print out locations
-            print(item, locations_list[item])
+            print(item)
 
     if level == 1:
         links = table.find_all('a', class_='href12') #get all links
@@ -498,7 +543,7 @@ def browse_location_rp5(level = 0, URL_location = weather_providers['RP5']['URL_
         for item in locations_list: #print out locations
             print(item, locations_list[item])
 
-    choice = input(f"Enter {levels[level]} name:\n") #user input
+    choice = input(f"\nEnter {levels[level]} name:\n") #user input
 
     if level <2: #if not city level
         print(locations_list[choice])
@@ -700,7 +745,7 @@ def run_app(*args, provider, forec):
     except KeyError:
         URL_next_day = provider['URL']
 
-    raw_page = get_raw_page(URL) #load a page
+
     if title == 'Accuweather':
 
         if args[0].loc:
@@ -718,7 +763,6 @@ def run_app(*args, provider, forec):
             weather_providers['ACCU']['URL_hourly'] = location_set['URL_hourly']
             weather_providers['ACCU']['URL_next_day'] = location_set['URL_next_day']
             weather_providers['ACCU']['Location'] = location_set['Location']
-            #set confing
 
         if args[0].next:
             raw_page = get_raw_page(URL_next_day) #load forecast
@@ -726,6 +770,7 @@ def run_app(*args, provider, forec):
             weather_info.update(info_next_day) #update with forecast
 
         if not args[0].next:
+            raw_page = get_raw_page(URL) #load a page
             weather_info = get_accu_info(raw_page) #extract data from a page
             if forec:
                 raw_page = get_raw_page(URL_hourly) #load forecast
@@ -742,7 +787,6 @@ def run_app(*args, provider, forec):
             location_set = browse_location_rp5()
             weather_providers['RP5']['URL'] = location_set['URL']
             weather_providers['RP5']['Location'] = location_set['Location']
-            print(weather_providers['RP5'])
 
         if args[0].next:
             raw_page = get_raw_page(URL_next_day)
@@ -750,6 +794,7 @@ def run_app(*args, provider, forec):
             weather_info.update(info_next_day) #update with forecast
 
         if not args[0].next:
+            raw_page = get_raw_page(URL) #load a page
             weather_info = get_rp5_info(raw_page) #extract data from a page
             if forec:
                 raw_page = get_raw_page(URL_hourly) #load forecast
@@ -767,8 +812,6 @@ def run_app(*args, provider, forec):
             location_set = browse_location_sinoptik()
             weather_providers['Sinoptik']['URL'] = location_set['URL']
             weather_providers['Sinoptik']['Location'] = location_set['Location']
-            print(weather_providers['Sinoptik'])
-            #set confing
 
         if args[0].next:
             raw_page = get_raw_page(URL_next_day)
@@ -776,6 +819,7 @@ def run_app(*args, provider, forec):
             weather_info.update(info_next_day)
 
         if not args[0].next:
+            raw_page = get_raw_page(URL) #load a page
             weather_info = get_sinoptik_info(raw_page) #extract data from a page
             if forec:
                 raw_page = get_raw_page(URL_hourly) #load forecast
@@ -802,7 +846,7 @@ def run_app(*args, provider, forec):
 
 def main():
 
-    load_config()
+    initiate_config(config)
 
     args = take_args()
 
@@ -818,7 +862,6 @@ def main():
         save_txt(ACTUAL_PRINTABLE_INFO, args.save)
 
     save_config(config)
-
 
 if __name__ == "__main__":
     main()
