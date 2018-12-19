@@ -52,16 +52,23 @@ config_path = 'weather_config.ini'
 def load_cache():
     """ Loads cache """
     global ACTUAL_WEATHER_INFO
+    global Reload_page
 
-    with open("weather_data.json", 'r') as f:
+    try:
+        f = open("weather_data.json", 'r')
         CACHE = json.load(f)
+    except FileNotFoundError:
+        Reload_page = True
+        return None
+
     try:
         cache_time = CACHE.pop('Time')
         if (cache_time + Caching_time * 60) < time.time():
             Reload_page = True
         else:
             ACTUAL_WEATHER_INFO = CACHE.copy()
-    except KeyError: #if no cache file exists
+
+    except KeyError: #if cache corrupt
         Reload_page = True
 
 def save_cache():
@@ -907,7 +914,7 @@ def main():
 
     args = take_args()
 
-    if args.u:
+    if args.u: #sets updating interval
         config['Caching_time']['Caching_time'] = str(args.u)
         save_config(config)
         return None
@@ -934,7 +941,7 @@ def main():
                 print_weather(output_data, title) #print weather info on a screen
             except KeyError:
                 pass
-            
+
         if args.sin:
             try:
                 output_data = make_printable(ACTUAL_WEATHER_INFO['Sinoptik']) #create printable
