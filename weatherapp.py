@@ -536,7 +536,7 @@ def browse_location_rp5(level = 0, URL_location = weather_providers['RP5']['URL_
             locations_list[item.attrs['title']] = "http://rp5.ua/" + url_decoded #sve to the table
 
         for item in locations_list: #print out locations
-            print(item, locations_list[item])
+            print(item)
 
     if level == 2:
         links = table.find_all('a') #get all links
@@ -546,7 +546,7 @@ def browse_location_rp5(level = 0, URL_location = weather_providers['RP5']['URL_
             locations_list[item.get_text()] = "http://rp5.ua/" + url_decoded #sve to the table
 
         for item in locations_list: #print out locations
-            print(item, locations_list[item])
+            print(item)
 
     choice = input(f"\nEnter {levels[level]} name:\n") #user input
 
@@ -760,6 +760,7 @@ def run_app(*args, provider, forec):
             #define current location of User
             location = []
             print('Your current location:')
+            raw_page = get_raw_page(URL_next_day) #load forecast
             location = get_current_location_accu(raw_page)
 
             for item in location:
