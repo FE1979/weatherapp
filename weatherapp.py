@@ -9,9 +9,11 @@ from html import escape, unescape
 from bs4 import BeautifulSoup
 import re
 import sys
+import time
 import pathlib
 import argparse
 import configparser
+import json
 
 """ Define global params """
 weather_providers = {
@@ -36,12 +38,36 @@ weather_providers = {
 
 ACTUAL_WEATHER_INFO = {}
 ACTUAL_PRINTABLE_INFO = {}
+CACHE = {}
+Caching_time = 0
+Reload_page = False
 
 config = configparser.ConfigParser()
 config.optionxform = str
 config_path = 'weather_config.ini'
 
 """ End of global params """
+
+""" Caching """
+def load_cache():
+    """ Loads cache """
+    global ACTUAL_WEATHER_INFO
+
+    with open("weather_data.json", 'r') as f:
+        CACHE = json.load(f)
+    try:
+        cache_time = CACHE.pop('Time')
+        if (cache_time + Caching_time * 3600) < time.time():
+            Reload_page = True
+        else:
+            ACTUAL_WEATHER_INFO = CACHE.copy()
+    except KeyError: #if no cache file exists
+        Reload_page = True
+
+def save_cache():
+    """ Saves cache """
+    with open("weather_data.json", 'w') as f:
+        json.dump(CACHE, f)
 
 """ Config settings and fuctions """
 
@@ -64,6 +90,7 @@ def load_config():
     """
     global weather_providers
     global config_path
+    global Caching_time
 
     config.read(config_path)
 
@@ -73,14 +100,16 @@ def load_config():
         weather_providers['Sinoptik'][item] = quote(config['Sinoptik'][item], safe='://')
     for item in config['RP5']:
         weather_providers['RP5'][item] = quote(config['RP5'][item], safe='://')
+
     #cyrillic titles do not urllib.auote
     weather_providers['RP5']['Location'] = config['RP5']['Location']
     weather_providers['Sinoptik']['Location'] = config['Sinoptik']['Location']
+    Caching_time = int(config['DEFAULT']['Caching_time'])
 
 def restore_config():
     """ Restores config with defaults """
 
-    config['DEFAULT'] = {}
+    config['DEFAULT'] = {'Caching_time': 1}
     config['ACCU'] = {}
     config['Sinoptik'] = {}
     config['RP5'] = {}
@@ -723,6 +752,7 @@ def take_args():
     parser.add_argument("-save", metavar="[filename]",
                         help="Saves printed out info into txt file",
                         type=str)
+    parser.add_argument("-update", help="Force updating cache", action="store_true")
 
     args = parser.parse_args()
 
@@ -740,6 +770,7 @@ def run_app(*args, provider, forec):
     """
     Runs loading, scraping and printing out weather info depending on given flags
     """
+    global CACHE
     weather_info = {}
     title = provider['Title']
     URL = provider['URL']
@@ -846,28 +877,76 @@ def run_app(*args, provider, forec):
 
     output_data = make_printable(weather_info) #create printable
     print_weather(output_data, title) #print weather info on a screen
-    """ save loaded data """
-    ACTUAL_WEATHER_INFO[title] = weather_info
+
+    """ save loaded data and caching"""
+
     ACTUAL_PRINTABLE_INFO[title] = nice_output(output_data, title)
+
+    if args[0].accu:
+        ACTUAL_WEATHER_INFO['ACCU'] = weather_info
+    if args[0].rp5:
+        ACTUAL_WEATHER_INFO['RP5'] = weather_info
+    if args[0].sin:
+        ACTUAL_WEATHER_INFO['Sinoptik'] = weather_info
+
+    CACHE = ACTUAL_WEATHER_INFO
+    CACHE['Time'] = time.time()
 
     pass
 
 def main():
-
+    global Reload_page
+    
     initiate_config(config)
+    load_cache()
 
     args = take_args()
 
-    if args.accu:
-        run_app(args, provider=weather_providers['ACCU'], forec=args.forec)
-    if args.rp5:
-        run_app(args, provider=weather_providers['RP5'], forec=args.forec)
-    if args.sin:
-        run_app(args, provider=weather_providers['Sinoptik'], forec=args.forec)
-    if args.csv:
-        save_csv(ACTUAL_WEATHER_INFO, args.csv)
-    if args.save:
-        save_txt(ACTUAL_PRINTABLE_INFO, args.save)
+    if args.update: #force update
+        Reload_page = True
+
+    if not Reload_page: #if we have actual info
+
+        if args.accu:
+            try:
+                output_data = make_printable(ACTUAL_WEATHER_INFO['ACCU']) #create printable
+                title = weather_providers['ACCU']['Title'] + ", поточна погода, " \
+                        + weather_providers['ACCU']['Location']
+            except KeyError: #if there is no any kind of data
+                pass
+            print_weather(output_data, title) #print weather info on a screen
+        if args.rp5:
+            try:
+                output_data = make_printable(ACTUAL_WEATHER_INFO['RP5']) #create printable
+                title = weather_providers['RP5']['Title'] + ", поточна погода, " \
+                        + weather_providers['RP5']['Location']
+            except KeyError:
+                pass
+            print_weather(output_data, title) #print weather info on a screen
+        if args.sin:
+            try:
+                output_data = make_printable(ACTUAL_WEATHER_INFO['Sinoptik']) #create printable
+                title = weather_providers['Sinoptik']['Title'] + ", поточна погода, " \
+                        + weather_providers['Sinoptik']['Location']
+            except KeyError:
+                pass
+            print_weather(output_data, title) #print weather info on a screen
+
+        pass
+    else:
+        if args.accu:
+            run_app(args, provider=weather_providers['ACCU'], forec=args.forec)
+        if args.rp5:
+            run_app(args, provider=weather_providers['RP5'], forec=args.forec)
+        if args.sin:
+            run_app(args, provider=weather_providers['Sinoptik'], forec=args.forec)
+        if args.csv:
+            save_csv(ACTUAL_WEATHER_INFO, args.csv)
+        if args.save:
+            save_txt(ACTUAL_PRINTABLE_INFO, args.save)
+
+    if Reload_page: #save cache while reloading
+        save_cache()
 
     save_config(config)
 
