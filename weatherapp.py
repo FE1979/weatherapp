@@ -39,7 +39,7 @@ weather_providers = {
 ACTUAL_WEATHER_INFO = {}
 ACTUAL_PRINTABLE_INFO = {}
 CACHE = {}
-Caching_time = 0
+Caching_time = 60
 Reload_page = False
 
 config = configparser.ConfigParser()
@@ -57,7 +57,7 @@ def load_cache():
         CACHE = json.load(f)
     try:
         cache_time = CACHE.pop('Time')
-        if (cache_time + Caching_time * 3600) < time.time():
+        if (cache_time + Caching_time * 60) < time.time():
             Reload_page = True
         else:
             ACTUAL_WEATHER_INFO = CACHE.copy()
@@ -76,7 +76,6 @@ def save_config(config):
 
     for item in weather_providers['ACCU']:
         config['ACCU'][item] = weather_providers['ACCU'][item]
-
     for item in weather_providers['Sinoptik']:
         config['Sinoptik'][item] = unquote(weather_providers['Sinoptik'][item])
     for item in weather_providers['RP5']:
@@ -104,12 +103,16 @@ def load_config():
     #cyrillic titles do not urllib.auote
     weather_providers['RP5']['Location'] = config['RP5']['Location']
     weather_providers['Sinoptik']['Location'] = config['Sinoptik']['Location']
-    Caching_time = int(config['DEFAULT']['Caching_time'])
+    try:
+        Caching_time = int(config['Caching_time']['Caching_time'])
+    except KeyError:
+        Caching_time = int(config['DEFAULT']['Caching_time'])
 
 def restore_config():
     """ Restores config with defaults """
 
-    config['DEFAULT'] = {'Caching_time': 1}
+    config['DEFAULT'] = {'Caching_time': '60'}
+    config['Caching_time'] = {'Caching_time': ''}
     config['ACCU'] = {}
     config['Sinoptik'] = {}
     config['RP5'] = {}
@@ -753,6 +756,8 @@ def take_args():
                         help="Saves printed out info into txt file",
                         type=str)
     parser.add_argument("-update", help="Force updating cache", action="store_true")
+    parser.add_argument("-u", metavar="minutes",
+                        help="Set updating interval in minutes", type=int)
 
     args = parser.parse_args()
 
@@ -896,11 +901,16 @@ def run_app(*args, provider, forec):
 
 def main():
     global Reload_page
-    
+
     initiate_config(config)
     load_cache()
 
     args = take_args()
+
+    if args.u:
+        config['Caching_time']['Caching_time'] = str(args.u)
+        save_config(config)
+        return None
 
     if args.update: #force update
         Reload_page = True
@@ -912,25 +922,27 @@ def main():
                 output_data = make_printable(ACTUAL_WEATHER_INFO['ACCU']) #create printable
                 title = weather_providers['ACCU']['Title'] + ", поточна погода, " \
                         + weather_providers['ACCU']['Location']
+                print_weather(output_data, title) #print weather info on a screen
             except KeyError: #if there is no any kind of data
                 pass
-            print_weather(output_data, title) #print weather info on a screen
+
         if args.rp5:
             try:
                 output_data = make_printable(ACTUAL_WEATHER_INFO['RP5']) #create printable
                 title = weather_providers['RP5']['Title'] + ", поточна погода, " \
                         + weather_providers['RP5']['Location']
+                print_weather(output_data, title) #print weather info on a screen
             except KeyError:
                 pass
-            print_weather(output_data, title) #print weather info on a screen
+            
         if args.sin:
             try:
                 output_data = make_printable(ACTUAL_WEATHER_INFO['Sinoptik']) #create printable
                 title = weather_providers['Sinoptik']['Title'] + ", поточна погода, " \
                         + weather_providers['Sinoptik']['Location']
+                print_weather(output_data, title) #print weather info on a screen
             except KeyError:
                 pass
-            print_weather(output_data, title) #print weather info on a screen
 
         pass
     else:
