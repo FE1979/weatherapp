@@ -212,11 +212,16 @@ def get_rp5_info(raw_page):
         else:
             index_RF = RealFeel_block.index(item)
 
-    RealFeel_block = list(RealFeel_block)[index_RF].find_all('td') #take all columns in 6th row
+    RealFeel_block = list(RealFeel_block)[index_RF].find_all('td') #take all columns in row
     RealFeel_block = list(RealFeel_block)[1] #select 2nd col
-    RF_text = str(list(RealFeel_block.children)[1].get_text()) # and make it string
-
-    weather_info['RealFeel'] = int(RF_text) #make it number
+    try:
+        RF_text = str(list(RealFeel_block.children)[1].get_text()) # and make it string
+    except IndexError:
+        RF_text = '' #if no data keep it blank
+    try:
+        weather_info['RealFeel'] = int(RF_text) #make it number
+    except ValueError: #if it is blank do keep it
+        weather_info['RealFeel'] = ''
 
     Cond_block = soup.find('table', id='forecastTable_1') #take table with short hourly description
     Cond_block = Cond_block.find_all('tr') #take all rows
@@ -649,7 +654,10 @@ def make_printable(weather_info):
         if item in weather_info.keys(): #if there is a data
             if item in temperature_heads: #if we need to show Celsius
                 output_data[0].append(headers_dict[item])
-                output_data[1].append(f"{weather_info[item]:.0f}" + ' ' + headers_dict['Deg'])
+                if weather_info[item] != '': #if temp is not blank
+                    output_data[1].append(f"{weather_info[item]:.0f}" + ' ' + headers_dict['Deg'])
+                else:
+                    output_data[1].append(f"{weather_info[item]}" + ' ' + headers_dict['Deg'])
             else:
                 output_data[0].append(headers_dict[item])
                 output_data[1].append(str(weather_info[item]))
