@@ -285,12 +285,12 @@ def get_rp5_next_day(raw_page):
     regex = "Завтра.*\. "
     forecast_start = re.search(regex, forecast) #find starting point of forecast info
     forecast = forecast[forecast_start.start():forecast_start.end()]
-    regex = r".\d"
+    regex = r".\d?\d"
     temperatures_as_str = re.findall(regex, forecast) #find all numbers
     weather_info['Next_day_temp_max'] = int(temperatures_as_str[0]) #First is Max in Celsius
     weather_info['Next_day_temp_min'] = int(temperatures_as_str[1]) #Second is Min in Celsius
 
-    regex = ".*.\d\d .C.F, " #all =/-, numbers and C/F signs ended with comma and space
+    regex = ".*.\d\d .C.F ?, " #all +/-, numbers and C/F signs ended with comma and space
     cond_pos = re.search(regex, forecast) #find start poin of cond description
     forecast = forecast[cond_pos.end():].capitalize() #take a cond string with Capital first letter
     regex = "  +"
