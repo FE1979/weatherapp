@@ -551,7 +551,6 @@ def browse_location_rp5(level = 0, URL_location = weather_providers['RP5']['URL_
     choice = input(f"\nEnter {levels[level]} name:\n") #user input
 
     if level <2: #if not city level
-        print(locations_list[choice])
         location_set = browse_location_rp5(level+1, locations_list[choice])
 
     if level == 2: #final if city level
