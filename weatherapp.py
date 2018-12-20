@@ -81,12 +81,11 @@ def save_cache():
 def save_config(config):
     """ Saves config to file with current values """
 
-    for item in weather_providers['ACCU']:
-        config['ACCU'][item] = weather_providers['ACCU'][item]
-    for item in weather_providers['Sinoptik']:
-        config['Sinoptik'][item] = unquote(weather_providers['Sinoptik'][item])
-    for item in weather_providers['RP5']:
-        config['RP5'][item] = unquote(weather_providers['RP5'][item])
+    for item in weather_providers:
+        for key in weather_providers[item]:
+            config[item][key] = unquote(weather_providers[item][key])
+
+    config['Cache']['Caching_interval'] = str(Caching_time)
 
     with open('weather_config.ini', 'w') as f:
         config.write(f)
@@ -100,36 +99,30 @@ def load_config():
 
     config.read(config_path)
 
-    for item in config['ACCU']:
-        weather_providers['ACCU'][item] = config['ACCU'][item]
-    for item in config['Sinoptik']:
-        weather_providers['Sinoptik'][item] = quote(config['Sinoptik'][item], safe='://')
-    for item in config['RP5']:
-        weather_providers['RP5'][item] = quote(config['RP5'][item], safe='://')
-
-    #cyrillic titles do not urllib.auote
-    weather_providers['RP5']['Location'] = config['RP5']['Location']
-    weather_providers['Sinoptik']['Location'] = config['Sinoptik']['Location']
-    try:
-        Caching_time = int(config['Caching_time']['Caching_time'])
-    except KeyError:
-        Caching_time = int(config['DEFAULT']['Caching_time'])
+    #load configuration to the weather_providers dict
+    for item in config:
+        for key in config[item]:
+            if key == 'Caching_interval':
+                Caching_time = int(config[item][key])
+            elif key == 'Location': #if cyrillic titles than do not urllib.quote
+                weather_providers[item][key] = config[item][key]
+            else: #if URL
+                weather_providers[item][key] = quote(config[item][key], safe='://')
 
 def restore_config():
     """ Restores config with defaults """
 
-    config['DEFAULT'] = {'Caching_time': '60'}
-    config['Caching_time'] = {'Caching_time': ''}
     config['ACCU'] = {}
     config['Sinoptik'] = {}
     config['RP5'] = {}
+    config['Cache'] = {}
 
-    for item in weather_providers['ACCU']:
-        config['ACCU'][item] = weather_providers['ACCU'][item]
-    for item in weather_providers['Sinoptik']:
-        config['Sinoptik'][item] = unquote(weather_providers['Sinoptik'][item])
-    for item in weather_providers['RP5']:
-        config['RP5'][item] = unquote(weather_providers['RP5'][item])
+    for item in weather_providers:
+        for key in weather_providers[item]:
+            config[item][key] = unquote(weather_providers[item][key])
+
+    config['Cache']['Caching_interval'] = str(Caching_time)
+
 
 def initiate_config(config):
     """ Initiates config
@@ -472,6 +465,16 @@ def browse_location_accu(level = 0, URL_location = weather_providers['ACCU']['UR
 
     return location_set
 
+def set_location_accu(location_set):
+    """ Sets to the config ACCU location """
+    global weather_providers
+    weather_providers['ACCU']['URL'] = location_set['URL']
+    weather_providers['ACCU']['URL_hourly'] = location_set['URL_hourly']
+    weather_providers['ACCU']['URL_next_day'] = location_set['URL_next_day']
+    weather_providers['ACCU']['Location'] = location_set['Location']
+
+    save_config(config)
+
 def browse_location_sinoptik(level = 0, URL_location = weather_providers['Sinoptik']['URL_locations']):
     """ Browse recursively locations of Sinoptik
         Starts from continents
@@ -539,6 +542,14 @@ def browse_location_sinoptik(level = 0, URL_location = weather_providers['Sinopt
 
     return location_set
 
+def set_location_Sinoptik(location_set):
+    """ Sets Sinoptik location to the config """
+
+    weather_providers['Sinoptik']['URL'] = location_set['URL']
+    weather_providers['Sinoptik']['Location'] = location_set['Location']
+
+    save_config(config)
+
 def browse_location_rp5(level = 0, URL_location = weather_providers['RP5']['URL_locations'] ):
     """ Browse recursively locations of RP5
         Starts from all countries
@@ -597,6 +608,14 @@ def browse_location_rp5(level = 0, URL_location = weather_providers['RP5']['URL_
         location_set['Location'] = choice
 
     return location_set
+
+def set_location_rp5(location_set):
+    """ Sets RP5 location to the config """
+
+    weather_providers['RP5']['URL'] = location_set['URL']
+    weather_providers['RP5']['Location'] = location_set['Location']
+
+    save_config(config)
 
 def search_location_rp5():
     """ Searches location typed by user through RP5 """
@@ -802,18 +821,16 @@ def run_app(*args, provider, forec):
             #define current location of User
             location = []
             print('Your current location:')
-            raw_page = get_raw_page(URL_next_day) #load forecast
-            location = get_current_location_accu(raw_page)
+            #raw_page = get_raw_page(URL_next_day) #load forecast
+            #location = get_current_location_accu(raw_page)
 
-            for item in location:
-                print(item, end=" ")
-            print('\n') #new line
+            #for item in location:
+            #    print(item, end=" ")
+            #print('\n') #new line
 
-            location_set = browse_location_accu()
-            weather_providers['ACCU']['URL'] = location_set['URL']
-            weather_providers['ACCU']['URL_hourly'] = location_set['URL_hourly']
-            weather_providers['ACCU']['URL_next_day'] = location_set['URL_next_day']
-            weather_providers['ACCU']['Location'] = location_set['Location']
+            location_set = browse_location_accu() #get new location
+            set_location_accu(location_set) #set location to the config
+            load_config() #reload config
 
         if args[0].next:
             raw_page = get_raw_page(URL_next_day) #load forecast
@@ -836,8 +853,8 @@ def run_app(*args, provider, forec):
 
             #set_location_accu()
             location_set = browse_location_rp5()
-            weather_providers['RP5']['URL'] = location_set['URL']
-            weather_providers['RP5']['Location'] = location_set['Location']
+            set_location_rp5(location_set) #set location to the config
+            load_config() #reload config
 
         if args[0].next:
             raw_page = get_raw_page(URL_next_day)
@@ -861,8 +878,8 @@ def run_app(*args, provider, forec):
 
             #set_location_accu()
             location_set = browse_location_sinoptik()
-            weather_providers['Sinoptik']['URL'] = location_set['URL']
-            weather_providers['Sinoptik']['Location'] = location_set['Location']
+            set_location_Sinoptik(location_set) #set location to the config
+            load_config() #reload config
 
         if args[0].next:
             raw_page = get_raw_page(URL_next_day)
@@ -908,6 +925,7 @@ def run_app(*args, provider, forec):
 
 def main():
     global Reload_page
+    global Caching_time
 
     initiate_config(config)
     load_cache()
@@ -915,11 +933,11 @@ def main():
     args = take_args()
 
     if args.u: #sets updating interval
-        config['Caching_time']['Caching_time'] = str(args.u)
+        Caching_time = args.u
         save_config(config)
         return None
 
-    if args.update: #force update
+    if args.update or args.loc: #force update
         Reload_page = True
 
     if not Reload_page: #if we have actual info
