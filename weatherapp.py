@@ -50,6 +50,14 @@ config_path = 'weather_config.ini'
 
 """ Caching """
 
+def save_cache(data, cache_dir, filename):
+    """ Saves data to cache file """
+
+    data = bytes(data) #convert to binary
+
+    with open(pathlib.Path.cwd() / cache_dir / filename) as f:
+        f.write(data)
+
 """ Config settings and fuctions """
 
 def save_config(config):
