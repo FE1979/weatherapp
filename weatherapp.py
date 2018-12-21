@@ -7,10 +7,12 @@ from urllib.parse import quote, unquote
 from urllib import parse
 from html import escape, unescape
 from bs4 import BeautifulSoup
+import os
 import re
 import sys
 import time
 import pathlib
+import hashlib
 import argparse
 import configparser
 import json
@@ -38,7 +40,8 @@ weather_providers = {
 
 ACTUAL_WEATHER_INFO = {}
 ACTUAL_PRINTABLE_INFO = {}
-
+working_dir = pathlib.Path.cwd()
+Cache_path = pathlib.Path
 Caching_time = 60
 Reload_page = True
 
@@ -51,12 +54,17 @@ config_path = 'weather_config.ini'
 """ Caching """
 
 def save_cache(data, cache_dir, filename):
-    """ Saves data to cache file """
-
-    data = bytes(data) #convert to binary
-
-    with open(pathlib.Path.cwd() / cache_dir / filename) as f:
-        f.write(data)
+    """ Saves data to cache file in cache directory
+        located in application directory
+    """
+    print(cache_dir / filename)
+    if cache_dir.exists():
+        with open(cache_dir / filename, 'wb') as f:
+            f.write(data)
+    else:
+        os.mkdir(cache_dir)
+        with open(cache_dir / filename, 'wb') as f:
+            f.write(data)
 
 """ Config settings and fuctions """
 
@@ -77,6 +85,7 @@ def load_config():
     """
     global weather_providers
     global config_path
+    global Cache_path
     global Caching_time
 
     config.read(config_path)
@@ -86,6 +95,8 @@ def load_config():
         for key in config[item]:
             if key == 'Caching_interval':
                 Caching_time = int(config[item][key])
+            elif key == 'Cache_dir':
+                Cache_path = config[item][key]
             elif key == 'Location': #if cyrillic titles than do not urllib.quote
                 weather_providers[item][key] = config[item][key]
             else: #if URL
@@ -104,6 +115,7 @@ def restore_config():
             config[item][key] = unquote(weather_providers[item][key])
 
     config['Cache']['Caching_interval'] = str(Caching_time)
+    config['Cache']['Cache_dir'] = 'Cache'
 
 def initiate_config(config):
     """ Initiates config
@@ -125,6 +137,10 @@ def get_raw_page(URL):
     HEAD = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:63.0) Gecko/201'}
     INFO_REQUEST = Request(URL, headers = HEAD)
     PAGE = urlopen(INFO_REQUEST).read()
+
+    filename = hashlib.md5(URL.encode('utf-8')).hexdigest() + '.wbc'
+    save_cache(PAGE, working_dir.joinpath(Cache_path), filename)
+
     PAGE = str(PAGE, encoding = 'utf-8')
 
     return PAGE
