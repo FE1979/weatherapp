@@ -821,12 +821,12 @@ def run_app(*args, provider, forec):
             #define current location of User
             location = []
             print('Your current location:')
-            #raw_page = get_raw_page(URL_next_day) #load forecast
-            #location = get_current_location_accu(raw_page)
+            raw_page = get_raw_page(URL) #load forecast
+            location = get_current_location_accu(raw_page)
 
-            #for item in location:
-            #    print(item, end=" ")
-            #print('\n') #new line
+            for item in location:
+                print(item, end=" ")
+            print('\n') #new line
 
             location_set = browse_location_accu() #get new location
             set_location_accu(location_set) #set location to the config
