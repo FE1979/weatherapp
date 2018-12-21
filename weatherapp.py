@@ -38,9 +38,9 @@ weather_providers = {
 
 ACTUAL_WEATHER_INFO = {}
 ACTUAL_PRINTABLE_INFO = {}
-CACHE = {}
+
 Caching_time = 60
-Reload_page = False
+Reload_page = True
 
 config = configparser.ConfigParser()
 config.optionxform = str
@@ -49,32 +49,6 @@ config_path = 'weather_config.ini'
 """ End of global params """
 
 """ Caching """
-def load_cache():
-    """ Loads cache """
-    global ACTUAL_WEATHER_INFO
-    global Reload_page
-
-    try:
-        f = open("weather_data.json", 'r')
-        CACHE = json.load(f)
-    except FileNotFoundError:
-        Reload_page = True
-        return None
-
-    try:
-        cache_time = CACHE.pop('Time')
-        if (cache_time + Caching_time * 60) < time.time():
-            Reload_page = True
-        else:
-            ACTUAL_WEATHER_INFO = CACHE.copy()
-
-    except KeyError: #if cache corrupt
-        Reload_page = True
-
-def save_cache():
-    """ Saves cache """
-    with open("weather_data.json", 'w') as f:
-        json.dump(CACHE, f)
 
 """ Config settings and fuctions """
 
@@ -122,7 +96,6 @@ def restore_config():
             config[item][key] = unquote(weather_providers[item][key])
 
     config['Cache']['Caching_interval'] = str(Caching_time)
-
 
 def initiate_config(config):
     """ Initiates config
@@ -801,7 +774,7 @@ def run_app(*args, provider, forec):
     """
     Runs loading, scraping and printing out weather info depending on given flags
     """
-    global CACHE
+
     weather_info = {}
     title = provider['Title']
     URL = provider['URL']
@@ -918,9 +891,6 @@ def run_app(*args, provider, forec):
     if args[0].sin:
         ACTUAL_WEATHER_INFO['Sinoptik'] = weather_info
 
-    CACHE = ACTUAL_WEATHER_INFO
-    CACHE['Time'] = time.time()
-
     pass
 
 def main():
@@ -928,7 +898,6 @@ def main():
     global Caching_time
 
     initiate_config(config)
-    load_cache()
 
     args = take_args()
 
@@ -981,9 +950,6 @@ def main():
             save_csv(ACTUAL_WEATHER_INFO, args.csv)
         if args.save:
             save_txt(ACTUAL_PRINTABLE_INFO, args.save)
-
-    if Reload_page: #save cache while reloading
-        save_cache()
 
     save_config(config)
 
