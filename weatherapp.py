@@ -91,6 +91,27 @@ def load_cache(URL):
 
     return PAGE
 
+def valid_cache(URL):
+    """ Returns True if cache file exists and valid
+        False if not
+    """
+
+    filename = hashlib.md5(URL.encode('utf-8')).hexdigest() + '.wbc'
+    path = pathlib.Path(working_dir / Cache_path)
+    cache_file = path.joinpath(filename)
+
+    if cache_file.exists():
+        cache_time = cache_file.stat().st_mtime
+        if time.time() < get_cache_time(URL) + Caching_time * 60:
+            cache_valid = True
+        else:
+            cache_valid = False
+
+    else:
+        cache_valid = False
+
+    return cache_valid
+
 """ Config settings and fuctions """
 
 def save_config(config):
@@ -160,7 +181,7 @@ def get_raw_page(URL):
     Loads a page from given URL
     """
 
-    if time.time() > (get_cache_time(URL) + Caching_time * 60):
+    if not valid_cache(URL):
 
         HEAD = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:63.0) Gecko/201'}
         INFO_REQUEST = Request(URL, headers = HEAD)
