@@ -111,6 +111,21 @@ def valid_cache(URL):
 
     return cache_valid
 
+def clear_cache():
+    """ Removes cache directory """
+
+    path = pathlib.Path(working_dir / Cache_path)
+
+    answer = input('Do you really want to remove all cache files with directory? Y/N\n')
+    if answer.lower() == 'y':
+        for item in list(path.glob('*.*')):
+            item.unlink()
+        print('Files removed')
+        path.rmdir()
+        print('Directory removed')
+    else:
+        pass
+
 """ Config settings and fuctions """
 
 def save_config(config):
@@ -830,7 +845,9 @@ def take_args():
                         help="Saves printed out info into txt file",
                         type=str)
     parser.add_argument("-refresh", help="Force reloading pages", action="store_true")
-    parser.add_argument("-u", metavar="minutes",
+    parser.add_argument("--clear-cache", help="Remove cache files and directory",
+                        action="store_true")
+    parser.add_argument("-u", metavar="[minutes]",
                         help="Set updating interval in minutes", type=int)
 
     args = parser.parse_args()
@@ -979,6 +996,10 @@ def main():
     initiate_config(config)
 
     args = take_args()
+
+    if args.clear_cache:
+        clear_cache()
+        return None
 
     if args.u: #sets updating interval
         Caching_time = args.u
