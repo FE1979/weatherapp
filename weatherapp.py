@@ -43,7 +43,6 @@ ACTUAL_PRINTABLE_INFO = {}
 working_dir = pathlib.Path.cwd()
 Cache_path = pathlib.Path
 Caching_time = 60
-Reload_page = True
 
 config = configparser.ConfigParser()
 config.optionxform = str
@@ -176,12 +175,12 @@ def initiate_config(config):
         config = load_config()
 
 """ Page loading and scraping functions """
-def get_raw_page(URL):
+def get_raw_page(URL, force_reload = False):
     """
     Loads a page from given URL
     """
 
-    if not valid_cache(URL):
+    if not valid_cache(URL) or force_reload:
 
         HEAD = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:63.0) Gecko/201'}
         INFO_REQUEST = Request(URL, headers = HEAD)
@@ -830,7 +829,7 @@ def take_args():
     parser.add_argument("-save", metavar="[filename]",
                         help="Saves printed out info into txt file",
                         type=str)
-    parser.add_argument("-update", help="Force updating cache", action="store_true")
+    parser.add_argument("-refresh", help="Force reloading pages", action="store_true")
     parser.add_argument("-u", metavar="minutes",
                         help="Set updating interval in minutes", type=int)
 
@@ -863,6 +862,11 @@ def run_app(*args, provider, forec):
     except KeyError:
         URL_next_day = provider['URL']
 
+    if args[0].refresh: #if we force page reloading
+        force_reload = True
+    else:
+        force_reload = False
+
 
     if title == 'Accuweather':
 
@@ -882,15 +886,15 @@ def run_app(*args, provider, forec):
             load_config() #reload config
 
         if args[0].next:
-            raw_page = get_raw_page(URL_next_day) #load forecast
+            raw_page = get_raw_page(URL_next_day, force_reload) #load forecast
             info_next_day = get_accu_next_day(raw_page) #run if forecast called
             weather_info.update(info_next_day) #update with forecast
 
         if not args[0].next:
-            raw_page = get_raw_page(URL) #load a page
+            raw_page = get_raw_page(URL, force_reload) #load a page
             weather_info = get_accu_info(raw_page) #extract data from a page
             if forec:
-                raw_page = get_raw_page(URL_hourly) #load forecast
+                raw_page = get_raw_page(URL_hourly, force_reload) #load forecast
                 info_hourly = get_accu_hourly(raw_page) #run if forecast called
                 weather_info.update(info_hourly) #update with forecast
 
@@ -906,12 +910,12 @@ def run_app(*args, provider, forec):
             load_config() #reload config
 
         if args[0].next:
-            raw_page = get_raw_page(URL_next_day)
+            raw_page = get_raw_page(URL_next_day, force_reload)
             info_next_day = get_rp5_next_day(raw_page)
             weather_info.update(info_next_day) #update with forecast
 
         if not args[0].next:
-            raw_page = get_raw_page(URL) #load a page
+            raw_page = get_raw_page(URL, force_reload) #load a page
             weather_info = get_rp5_info(raw_page) #extract data from a page
             if forec:
                 raw_page = get_raw_page(URL_hourly) #load forecast
@@ -931,15 +935,15 @@ def run_app(*args, provider, forec):
             load_config() #reload config
 
         if args[0].next:
-            raw_page = get_raw_page(URL_next_day)
+            raw_page = get_raw_page(URL_next_day, force_reload)
             info_next_day = get_sinoptik_next_day(raw_page)
             weather_info.update(info_next_day)
 
         if not args[0].next:
-            raw_page = get_raw_page(URL) #load a page
+            raw_page = get_raw_page(URL, force_reload) #load a page
             weather_info = get_sinoptik_info(raw_page) #extract data from a page
             if forec:
-                raw_page = get_raw_page(URL_hourly) #load forecast
+                raw_page = get_raw_page(URL_hourly, force_reload) #load forecast
                 info_hourly = get_sinoptik_hourly(raw_page) #run if forecast called
                 weather_info.update(info_hourly) #update with forecast
 
@@ -970,7 +974,6 @@ def run_app(*args, provider, forec):
     pass
 
 def main():
-    global Reload_page
     global Caching_time
 
     initiate_config(config)
@@ -982,50 +985,16 @@ def main():
         save_config(config)
         return None
 
-    if args.update or args.loc: #force update
-        Reload_page = True
-
-    if not Reload_page: #if we have actual info
-
-        if args.accu:
-            try:
-                output_data = make_printable(ACTUAL_WEATHER_INFO['ACCU']) #create printable
-                title = weather_providers['ACCU']['Title'] + ", поточна погода, " \
-                        + weather_providers['ACCU']['Location']
-                print_weather(output_data, title) #print weather info on a screen
-            except KeyError: #if there is no any kind of data
-                pass
-
-        if args.rp5:
-            try:
-                output_data = make_printable(ACTUAL_WEATHER_INFO['RP5']) #create printable
-                title = weather_providers['RP5']['Title'] + ", поточна погода, " \
-                        + weather_providers['RP5']['Location']
-                print_weather(output_data, title) #print weather info on a screen
-            except KeyError:
-                pass
-
-        if args.sin:
-            try:
-                output_data = make_printable(ACTUAL_WEATHER_INFO['Sinoptik']) #create printable
-                title = weather_providers['Sinoptik']['Title'] + ", поточна погода, " \
-                        + weather_providers['Sinoptik']['Location']
-                print_weather(output_data, title) #print weather info on a screen
-            except KeyError:
-                pass
-
-        pass
-    else:
-        if args.accu:
-            run_app(args, provider=weather_providers['ACCU'], forec=args.forec)
-        if args.rp5:
-            run_app(args, provider=weather_providers['RP5'], forec=args.forec)
-        if args.sin:
-            run_app(args, provider=weather_providers['Sinoptik'], forec=args.forec)
-        if args.csv:
-            save_csv(ACTUAL_WEATHER_INFO, args.csv)
-        if args.save:
-            save_txt(ACTUAL_PRINTABLE_INFO, args.save)
+    if args.accu:
+        run_app(args, provider=weather_providers['ACCU'], forec=args.forec)
+    if args.rp5:
+        run_app(args, provider=weather_providers['RP5'], forec=args.forec)
+    if args.sin:
+        run_app(args, provider=weather_providers['Sinoptik'], forec=args.forec)
+    if args.csv:
+        save_csv(ACTUAL_WEATHER_INFO, args.csv)
+    if args.save:
+        save_txt(ACTUAL_PRINTABLE_INFO, args.save)
 
     save_config(config)
 
