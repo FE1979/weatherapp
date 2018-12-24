@@ -57,7 +57,6 @@ def save_cache(data, cache_dir, filename):
     """ Saves data to cache file in cache directory
         located in application directory
     """
-    print(cache_dir / filename)
     if cache_dir.exists():
         with open(cache_dir / filename, 'wb') as f:
             f.write(data)
@@ -65,6 +64,32 @@ def save_cache(data, cache_dir, filename):
         os.mkdir(cache_dir)
         with open(cache_dir / filename, 'wb') as f:
             f.write(data)
+
+def get_cache_time(URL):
+    """ Gets cache file creating time """
+
+    filename = hashlib.md5(URL.encode('utf-8')).hexdigest() + '.wbc'
+    path = pathlib.Path(working_dir / Cache_path)
+    cache_file = path.joinpath(filename)
+
+    if cache_file.exists():
+        cache_time = cache_file.stat().st_mtime
+    else:
+        cache_time = 0
+
+    return cache_time
+
+def load_cache(URL):
+    """ Loads cache for given URL """
+
+    filename = hashlib.md5(URL.encode('utf-8')).hexdigest() + '.wbc'
+    path = pathlib.Path(working_dir / Cache_path)
+    cache_file = path.joinpath(filename)
+
+    with open(cache_file, 'rb') as f:
+        PAGE = f.read()
+
+    return PAGE
 
 """ Config settings and fuctions """
 
@@ -134,12 +159,18 @@ def get_raw_page(URL):
     """
     Loads a page from given URL
     """
-    HEAD = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:63.0) Gecko/201'}
-    INFO_REQUEST = Request(URL, headers = HEAD)
-    PAGE = urlopen(INFO_REQUEST).read()
 
-    filename = hashlib.md5(URL.encode('utf-8')).hexdigest() + '.wbc'
-    save_cache(PAGE, working_dir.joinpath(Cache_path), filename)
+    if time.time() > (get_cache_time(URL) + Caching_time * 60):
+
+        HEAD = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:63.0) Gecko/201'}
+        INFO_REQUEST = Request(URL, headers = HEAD)
+        PAGE = urlopen(INFO_REQUEST).read()
+
+        filename = hashlib.md5(URL.encode('utf-8')).hexdigest() + '.wbc'
+        save_cache(PAGE, working_dir.joinpath(Cache_path), filename)
+
+    else:
+        PAGE = load_cache(URL)
 
     PAGE = str(PAGE, encoding = 'utf-8')
 
