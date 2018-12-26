@@ -17,59 +17,38 @@ import argparse
 import configparser
 import json
 
-""" Define global params """
-weather_providers = {
-'ACCU': {'Title': 'Accuweather',
-        'URL': "https://www.accuweather.com/uk/ua/kyiv/324505/weather-forecast/324505",
-        'URL_hourly': "https://www.accuweather.com/uk/ua/kyiv/324505/hourly-weather-forecast/324505",
-        'URL_next_day': "https://www.accuweather.com/uk/ua/kyiv/324505/daily-weather-forecast/324505?day=2",
-        'Location': 'Київ',
-        'URL_locations': "https://www.accuweather.com/uk/browse-locations"
-        },
-'RP5': {'Title': 'RP5',
-        'URL': "http://rp5.ua/" + quote("Погода_в_Києві"),
-        'Location': 'Київ',
-        'URL_locations': "http://rp5.ua/" + quote("Погода_в_світі")
-        },
-'Sinoptik': {'Title': 'Sinoptik',
-        'URL': "https://ua.sinoptik.ua/" + quote("погода-київ"),
-        'Location': 'Київ',
-        'URL_locations': "https://ua.sinoptik.ua/" + quote("погода-європа")
-        }
-}
-
-ACTUAL_WEATHER_INFO = {}
-ACTUAL_PRINTABLE_INFO = {}
-working_dir = pathlib.Path.cwd()
-Cache_path = pathlib.Path
-Caching_time = 60
-
-config = configparser.ConfigParser()
-config.optionxform = str
-config_path = 'weather_config.ini'
-
-""" End of global params """
+import config
 
 """ Caching """
 
-def save_cache(data, cache_dir, filename):
+def get_cache_file_path(URL):
+    """ Gets cache file full path """
+
+    filename = hashlib.md5(URL.encode('utf-8')).hexdigest() + '.wbc'
+    path = pathlib.Path(config.working_dir / config.Cache_path)
+    cache_file_path = path.joinpath(filename)
+
+    return cache_file_path
+
+def save_cache(data, URL):
     """ Saves data to cache file in cache directory
         located in application directory
     """
-    if cache_dir.exists():
-        with open(cache_dir / filename, 'wb') as f:
+
+    cache_file = get_cache_file_path(URL)
+
+    if cache_file.parent.exists():
+        with open(cache_file, 'wb') as f:
             f.write(data)
     else:
-        os.mkdir(cache_dir)
-        with open(cache_dir / filename, 'wb') as f:
+        os.mkdir(cache_file.parent)
+        with open(cache_file, 'wb') as f:
             f.write(data)
 
 def get_cache_time(URL):
     """ Gets cache file creating time """
 
-    filename = hashlib.md5(URL.encode('utf-8')).hexdigest() + '.wbc'
-    path = pathlib.Path(working_dir / Cache_path)
-    cache_file = path.joinpath(filename)
+    cache_file = get_cache_file_path(URL)
 
     if cache_file.exists():
         cache_time = cache_file.stat().st_mtime
@@ -81,9 +60,7 @@ def get_cache_time(URL):
 def load_cache(URL):
     """ Loads cache for given URL """
 
-    filename = hashlib.md5(URL.encode('utf-8')).hexdigest() + '.wbc'
-    path = pathlib.Path(working_dir / Cache_path)
-    cache_file = path.joinpath(filename)
+    cache_file = get_cache_file_path(URL)
 
     with open(cache_file, 'rb') as f:
         PAGE = f.read()
@@ -95,13 +72,11 @@ def valid_cache(URL):
         False if not
     """
 
-    filename = hashlib.md5(URL.encode('utf-8')).hexdigest() + '.wbc'
-    path = pathlib.Path(working_dir / Cache_path)
-    cache_file = path.joinpath(filename)
+    cache_file = get_cache_file_path(URL)
 
     if cache_file.exists():
         cache_time = cache_file.stat().st_mtime
-        if time.time() < get_cache_time(URL) + Caching_time * 60:
+        if time.time() < get_cache_time(URL) + config.Caching_time * 60:
             cache_valid = True
         else:
             cache_valid = False
@@ -114,7 +89,7 @@ def valid_cache(URL):
 def clear_cache():
     """ Removes cache directory """
 
-    path = pathlib.Path(working_dir / Cache_path)
+    path = pathlib.Path(config.working_dir / config.Cache_path)
 
     answer = input('Do you really want to remove all cache files with directory? Y/N\n')
     if answer.lower() == 'y':
@@ -125,69 +100,6 @@ def clear_cache():
         print('Directory removed')
     else:
         pass
-
-""" Config settings and fuctions """
-
-def save_config(config):
-    """ Saves config to file with current values """
-
-    for item in weather_providers:
-        for key in weather_providers[item]:
-            config[item][key] = unquote(weather_providers[item][key])
-
-    config['Cache']['Caching_interval'] = str(Caching_time)
-
-    with open('weather_config.ini', 'w') as f:
-        config.write(f)
-
-def load_config():
-    """ Loads configuration
-    """
-    global weather_providers
-    global config_path
-    global Cache_path
-    global Caching_time
-
-    config.read(config_path)
-
-    #load configuration to the weather_providers dict
-    for item in config:
-        for key in config[item]:
-            if key == 'Caching_interval':
-                Caching_time = int(config[item][key])
-            elif key == 'Cache_dir':
-                Cache_path = config[item][key]
-            elif key == 'Location': #if cyrillic titles than do not urllib.quote
-                weather_providers[item][key] = config[item][key]
-            else: #if URL
-                weather_providers[item][key] = quote(config[item][key], safe='://')
-
-def restore_config():
-    """ Restores config with defaults """
-
-    config['ACCU'] = {}
-    config['Sinoptik'] = {}
-    config['RP5'] = {}
-    config['Cache'] = {}
-
-    for item in weather_providers:
-        for key in weather_providers[item]:
-            config[item][key] = unquote(weather_providers[item][key])
-
-    config['Cache']['Caching_interval'] = str(Caching_time)
-    config['Cache']['Cache_dir'] = 'Cache'
-
-def initiate_config(config):
-    """ Initiates config
-        Sets weather_providers and other conf variables
-    """
-
-    path = pathlib.Path(config_path)
-
-    if not path.exists(): #create new config file with defaults
-        config = restore_config()
-    else:
-        config = load_config()
 
 """ Page loading and scraping functions """
 def get_raw_page(URL, force_reload = False):
@@ -201,8 +113,7 @@ def get_raw_page(URL, force_reload = False):
         INFO_REQUEST = Request(URL, headers = HEAD)
         PAGE = urlopen(INFO_REQUEST).read()
 
-        filename = hashlib.md5(URL.encode('utf-8')).hexdigest() + '.wbc'
-        save_cache(PAGE, working_dir.joinpath(Cache_path), filename)
+        save_cache(PAGE, URL)
 
     else:
         PAGE = load_cache(URL)
@@ -482,7 +393,7 @@ def get_current_location_accu(raw_page):
 
     return accu_location
 
-def browse_location_accu(level = 0, URL_location = weather_providers['ACCU']['URL_locations']):
+def browse_location_accu(level = 0, URL_location = config.weather_providers['ACCU']['URL_locations']):
     """ Browse recursively locations of ACCU
         Starts from continents
         defaults: level = 0: continent level
@@ -538,7 +449,7 @@ def set_location_accu(location_set):
 
     save_config(config)
 
-def browse_location_sinoptik(level = 0, URL_location = weather_providers['Sinoptik']['URL_locations']):
+def browse_location_sinoptik(level = 0, URL_location = config.weather_providers['Sinoptik']['URL_locations']):
     """ Browse recursively locations of Sinoptik
         Starts from continents
         defaults: level = 0: continent level
@@ -613,7 +524,7 @@ def set_location_Sinoptik(location_set):
 
     save_config(config)
 
-def browse_location_rp5(level = 0, URL_location = weather_providers['RP5']['URL_locations'] ):
+def browse_location_rp5(level = 0, URL_location = config.weather_providers['RP5']['URL_locations'] ):
     """ Browse recursively locations of RP5
         Starts from all countries
         defaults: level = 0: country level
@@ -979,21 +890,18 @@ def run_app(*args, provider, forec):
 
     """ save loaded data and caching"""
 
-    ACTUAL_PRINTABLE_INFO[title] = nice_output(output_data, title)
+    config.ACTUAL_PRINTABLE_INFO[title] = nice_output(output_data, title)
 
     if args[0].accu:
-        ACTUAL_WEATHER_INFO['ACCU'] = weather_info
+        config.ACTUAL_WEATHER_INFO['ACCU'] = weather_info
     if args[0].rp5:
-        ACTUAL_WEATHER_INFO['RP5'] = weather_info
+        config.ACTUAL_WEATHER_INFO['RP5'] = weather_info
     if args[0].sin:
-        ACTUAL_WEATHER_INFO['Sinoptik'] = weather_info
+        config.ACTUAL_WEATHER_INFO['Sinoptik'] = weather_info
 
     pass
 
 def main():
-    global Caching_time
-
-    initiate_config(config)
 
     args = take_args()
 
@@ -1002,22 +910,22 @@ def main():
         return None
 
     if args.u: #sets updating interval
-        Caching_time = args.u
-        save_config(config)
+        config.Caching_time = args.u
+        config.save_config(config.config)
         return None
 
     if args.accu:
-        run_app(args, provider=weather_providers['ACCU'], forec=args.forec)
+        run_app(args, provider=config.weather_providers['ACCU'], forec=args.forec)
     if args.rp5:
-        run_app(args, provider=weather_providers['RP5'], forec=args.forec)
+        run_app(args, provider=config.weather_providers['RP5'], forec=args.forec)
     if args.sin:
-        run_app(args, provider=weather_providers['Sinoptik'], forec=args.forec)
+        run_app(args, provider=config.weather_providers['Sinoptik'], forec=args.forec)
     if args.csv:
-        save_csv(ACTUAL_WEATHER_INFO, args.csv)
+        save_csv(config.ACTUAL_WEATHER_INFO, args.csv)
     if args.save:
-        save_txt(ACTUAL_PRINTABLE_INFO, args.save)
+        save_txt(config.ACTUAL_PRINTABLE_INFO, args.save)
 
-    save_config(config)
+    config.save_config(config.config)
 
 if __name__ == "__main__":
     main()
