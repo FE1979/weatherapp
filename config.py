@@ -9,17 +9,23 @@ weather_providers = {
         'URL_hourly': "https://www.accuweather.com/uk/ua/kyiv/324505/hourly-weather-forecast/324505",
         'URL_next_day': "https://www.accuweather.com/uk/ua/kyiv/324505/daily-weather-forecast/324505?day=2",
         'Location': 'Київ',
-        'URL_locations': "https://www.accuweather.com/uk/browse-locations"
+        'URL_locations': "https://www.accuweather.com/uk/browse-locations",
+        'Cache_path': str(pathlib.Path.cwd() / 'Cache'),
+        'Caching_time': 60
         },
 'RP5': {'Title': 'RP5',
         'URL': "http://rp5.ua/" + quote("Погода_в_Києві"),
         'Location': 'Київ',
-        'URL_locations': "http://rp5.ua/" + quote("Погода_в_світі")
+        'URL_locations': "http://rp5.ua/" + quote("Погода_в_світі"),
+        'Cache_path': str(pathlib.Path.cwd() / 'Cache'),
+        'Caching_time': 60
         },
 'Sinoptik': {'Title': 'Sinoptik',
         'URL': "https://ua.sinoptik.ua/" + quote("погода-київ"),
         'Location': 'Київ',
-        'URL_locations': "https://ua.sinoptik.ua/" + quote("погода-європа")
+        'URL_locations': "https://ua.sinoptik.ua/" + quote("погода-європа"),
+        'Cache_path': str(pathlib.Path.cwd() / 'Cache'),
+        'Caching_time': 60
         }
 }
 
@@ -42,9 +48,12 @@ def save_config(config):
 
     for item in weather_providers:
         for key in weather_providers[item]:
-            config[item][key] = unquote(weather_providers[item][key])
+            if type(weather_providers[item][key]) == 'str':
+                config[item][key] = unquote(weather_providers[item][key])
+            elif type(weather_providers[item][key]) == 'int':
+                config[item][key] = str(weather_providers[item][key])
 
-    config['Cache']['Caching_interval'] = str(Caching_time)
+    #config['Cache']['Caching_interval'] = str(Caching_time)
 
     with open('weather_config.ini', 'w') as f:
         config.write(f)
@@ -62,46 +71,54 @@ def load_config():
     #load configuration to the weather_providers dict
     for item in config:
         for key in config[item]:
-            if key == 'Caching_interval':
+            if key == 'Caching_time':
                 Caching_time = int(config[item][key])
-            elif key == 'Cache_dir':
+            elif key == 'Cache_path':
                 Cache_path = config[item][key]
             elif key == 'Location': #if cyrillic titles than do not urllib.quote
                 weather_providers[item][key] = config[item][key]
             else: #if URL
                 weather_providers[item][key] = quote(config[item][key], safe='://')
 
-def restore_config():
+    return config
+
+def restore_config(weather_providers):
     """ Restores config with defaults """
 
     config['ACCU'] = {}
     config['Sinoptik'] = {}
     config['RP5'] = {}
-    config['Cache'] = {}
 
     for item in weather_providers:
         for key in weather_providers[item]:
-            config[item][key] = unquote(weather_providers[item][key])
+            if type(weather_providers[item][key]) == str:
+                config[item][key] = unquote(weather_providers[item][key])
+            elif type(weather_providers[item][key]) == int:
+                config[item][key] = str(weather_providers[item][key])
 
+    """
     config['Cache']['Caching_interval'] = str(Caching_time)
     config['Cache']['Cache_dir'] = 'Cache'
-
+    """
     return config
 
-def initiate_config(config):
+def initiate_config(config, weather_providers):
     """ Initiates config
         Sets weather_providers and other conf variables
     """
-
+    config = configparser.ConfigParser()
+    config.optionxform = str
     path = pathlib.Path(config_path)
 
     if not path.exists(): #create new config file with defaults
-        config = restore_config()
+        config = restore_config(weather_providers)
         save_config(config)
     else:
         config = load_config()
 
-initiate_config(config)
+    return config
+
+config = initiate_config(config, weather_providers)
 
 if __name__ == "__main__":
     pass
