@@ -20,158 +20,6 @@ import json
 import config
 import providers
 
-""" Caching """
-
-
-
-""" Page loading and scraping functions """
-
-def get_sinoptik_info(raw_page):
-    """ Extracts data from Sinoptik loaded page
-        returns info in dictionary: Temperature, Condition, RealFeel
-    """
-    weather_info = {}
-
-    soup = BeautifulSoup(raw_page, 'html.parser')
-    curr_temp_cond = soup.find('div', class_='lSide')
-    cond = list(curr_temp_cond.find('div', class_='img').children)
-    cond = str(cond[1]['alt'])
-    weather_info['Condition'] = cond
-
-    curr_temp = str(curr_temp_cond.find('p', class_='today-temp').get_text())
-    weather_info['Temperature'] = int(curr_temp[:-2]) #delete Celsius sign and make number
-
-    curr_realfeel = soup.find('div', class_='rSide')
-    curr_realfeel = curr_realfeel.find('tr', class_='temperatureSens')
-    curr_realfeel = str(curr_realfeel.find('td', class_='p1').get_text())
-    weather_info['RealFeel'] = int(curr_realfeel[:-1]) #remove grade sign and make number
-
-    return weather_info
-
-def get_sinoptik_hourly(raw_page):
-    """ Gets temperature forecast for next 8 hours
-        Returns dict: Max, Min, Average, Forecast horizon in number of hours
-    """
-
-    weather_info = {}
-    table_data = []
-
-    soup = BeautifulSoup(raw_page, 'html.parser')
-    table = soup.find('table', class_='weatherDetails')
-    table = table.find('tr', class_='temperature')
-    table = table.find_all('td')
-
-    for item in list(table):
-        t = item.get_text()
-        table_data.append(int(t[:-1])) #remove grade sign
-
-    weather_info['Max'] = max(table_data)
-    weather_info['Min'] = min(table_data)
-    weather_info['Av'] = sum(table_data) / len(table_data)
-    weather_info['Num'] = len(table_data)
-
-    return weather_info
-
-def get_sinoptik_next_day(raw_page):
-    """ Extracts weather info for next day
-        returns info in dictionary: Temperature, Condition, RealFeel
-    """
-    weather_info = {}
-
-    soup = BeautifulSoup(raw_page, 'html.parser')
-    next_day_block = soup.find('div', id="bd2")
-    regex = "weatherIco.*" #there is different weather icons for condition
-    next_day_cond = next_day_block.find('div', class_=re.compile(regex))
-    weather_info['Next_day_condition'] = str(next_day_cond.attrs['title'])
-    #find max temperature
-    Next_day_temp = next_day_block.find('div', class_="max")
-    Next_day_temp = Next_day_temp.find('span').string
-    weather_info['Next_day_temp_max'] = int(Next_day_temp[:-1])
-    #Find min temp
-    Next_day_temp = next_day_block.find('div', class_="min")
-    Next_day_temp = Next_day_temp.find('span').string
-    weather_info['Next_day_temp_min'] = int(Next_day_temp[:-1])
-
-    return weather_info
-
-""" Location functions """
-
-def browse_location_sinoptik(level = 0, URL_location = config.weather_providers['Sinoptik']['URL_locations']):
-    """ Browse recursively locations of Sinoptik
-        Starts from continents
-        defaults: level = 0: continent level
-                  URL_location: page with continents, Europe by default
-        Each next call with new URL and level + 1
-        Returns: URL (current weather), name of Location
-    """
-
-    levels = ['continent', 'country', 'region', 'city'] #for user input and level check
-    raw_page = get_raw_page(URL_location) #read locations
-    locations_list = {} #locations associated with their urls
-    location_set = {} #result of func
-
-    if level == 0: #continents and countries are on same page so if we are on 0 level we should print continents
-        soup = BeautifulSoup(raw_page, 'html.parser') #parse page
-        raw_list = soup.find('div', class_="mapRightCol") #find list of locations
-        raw_list = raw_list.find('div') #take first div
-        raw_list = raw_list.find_all('a') #take all links in list of locations
-
-        for item in raw_list: #associate location with ulr
-            url_decoded = quote(item.attrs['href'])
-            locations_list[item.get_text()] = "https:" + url_decoded
-
-        for item in locations_list: #print out locations
-            print(item)
-
-    if level == 1 or level == 2: #if country or region level
-        soup = BeautifulSoup(raw_page, 'html.parser') #parse page
-        raw_list = soup.find('div', class_="maxHeight") #find list of locations
-
-        raw_list = raw_list.find('div') #take first div
-        raw_list = raw_list.find_all('a') #take all links in list of locations
-
-        for item in raw_list: #associate location with ulr
-            url_decoded = quote(item.attrs['href'])
-            locations_list[item.get_text()] = "https:" + url_decoded
-
-        for item in locations_list: #print out locations
-            print(item)
-
-    if level == 3: #if city level
-        soup = BeautifulSoup(raw_page, 'html.parser') #parse page
-        raw_list = soup.find('div', class_="mapBotCol") #find list of locations
-        raw_list = raw_list.find('div', class_="clearfix")
-        raw_list = raw_list.find_all('a') #take all links in list of locations
-        print(raw_list)
-        for item in raw_list: #associate location with ulr
-            url_decoded = quote(item.attrs['href'])
-            locations_list[item.get_text()] = "https:" + url_decoded
-
-        for item in locations_list: #print out locations
-            print(item)
-
-    choice = input(f"\nEnter {levels[level]} name:\n") #user input
-
-    if level != 3:
-        #call this function again with new locations
-
-        location_set = browse_location_sinoptik(level+1, locations_list[choice])
-
-    if level == 3:
-        location_set['URL'] = locations_list[choice]
-        location_set['Location'] = choice
-
-    return location_set
-
-def set_location_Sinoptik(location_set):
-    """ Sets Sinoptik location to the config """
-
-    weather_providers['Sinoptik']['URL'] = location_set['URL']
-    weather_providers['Sinoptik']['Location'] = location_set['Location']
-
-    save_config(config)
-
-
 """ Output functions """
 def print_weather(output_data, title):
     """
@@ -413,24 +261,24 @@ def run_app(*args, Provider, forec):
         if args[0].loc:
             #define current location of User
             location = []
-            print(f"Your current location:\n{weather_providers['Sinoptik']['Location']}\n")
+            print(f"Your current location:\n{Provider.location}\n")
 
             #set_location_accu()
-            location_set = browse_location_sinoptik()
-            set_location_Sinoptik(location_set) #set location to the config
-            load_config() #reload config
+            location_set = Provider.browse_location()
+            Provider.set_location(location_set) #set location to the config
+            config.load_config() #reload config
 
         if args[0].next:
-            raw_page = get_raw_page(URL_next_day, force_reload)
-            info_next_day = get_sinoptik_next_day(raw_page)
+            Provider.raw_page = Provider.get_raw_page(Provider.url, force_reload)
+            info_next_day = Provider.get_next_day()
             weather_info.update(info_next_day)
 
         if not args[0].next:
-            raw_page = get_raw_page(URL, force_reload) #load a page
-            weather_info = get_sinoptik_info(raw_page) #extract data from a page
+            Provider.raw_page = Provider.get_raw_page(Provider.url, force_reload) #load a page
+            weather_info = Provider.get_info() #extract data from a page
             if forec:
-                raw_page = get_raw_page(URL_hourly, force_reload) #load forecast
-                info_hourly = get_sinoptik_hourly(raw_page) #run if forecast called
+                Provider.raw_page = Provider.get_raw_page(Provider.url, force_reload) #load forecast
+                info_hourly = Provider.get_hourly() #run if forecast called
                 weather_info.update(info_hourly) #update with forecast
 
     try:
@@ -494,7 +342,15 @@ def main():
                                 )
         run_app(args, Provider=RP5, forec=args.forec)
     if args.sin:
-        run_app(args, provider=config.weather_providers['Sinoptik'], forec=args.forec)
+        Sinoptik = providers.SinoptikProvider(
+                                config.weather_providers['Sinoptik']['Title'],
+                                config.weather_providers['Sinoptik']['URL'],
+                                config.weather_providers['Sinoptik']['URL_locations'],
+                                config.weather_providers['Sinoptik']['Location'],
+                                config.weather_providers['Sinoptik']['Cache_path'],
+                                config.weather_providers['Sinoptik']['Caching_time'],
+                                )
+        run_app(args, Provider=Sinoptik, forec=args.forec)
     if args.csv:
         save_csv(config.ACTUAL_WEATHER_INFO, args.csv)
     if args.save:
