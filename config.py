@@ -1,3 +1,6 @@
+""" Configuration module for weatherapp.py
+"""
+
 from urllib.parse import quote, unquote
 import pathlib
 import configparser
@@ -48,12 +51,10 @@ def save_config(config):
 
     for item in weather_providers:
         for key in weather_providers[item]:
-            if type(weather_providers[item][key]) == 'str':
+            if type(weather_providers[item][key]) == str:
                 config[item][key] = unquote(weather_providers[item][key])
-            elif type(weather_providers[item][key]) == 'int':
+            elif type(weather_providers[item][key]) == int:
                 config[item][key] = str(weather_providers[item][key])
-
-    #config['Cache']['Caching_interval'] = str(Caching_time)
 
     with open('weather_config.ini', 'w') as f:
         config.write(f)
@@ -117,6 +118,25 @@ def initiate_config(config, weather_providers):
         config = load_config()
 
     return config
+
+def set_config(title, variables, weather_providers):
+    """ Sets new config variables
+        title - title of weather provider
+        variables - provider variables
+        weather_providers - output
+    """
+
+    if title == 'Accuweather':
+        for item in variables:
+            weather_providers['ACCU'][item] = variables[item]
+    elif title == 'RP5':
+        for item in variables:
+            weather_providers['RP5'][item] = variables[item]
+    elif title == 'Sinoptik':
+        for item in variables:
+            weather_providers['Sinoptik'][item] = variables[item]
+
+    return weather_providers
 
 config = initiate_config(config, weather_providers)
 

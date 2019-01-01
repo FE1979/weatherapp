@@ -194,7 +194,7 @@ def run_app(*args, Provider, forec):
     """
 
     weather_info = {}
-    title = Provider.title
+    title = Provider.Title
 
     if args[0].refresh: #if we force page reloading
         force_reload = True
@@ -208,7 +208,7 @@ def run_app(*args, Provider, forec):
             #define current location of User
             location = []
             print('Your current location:')
-            Provider.raw_page = Provider.get_raw_page(Provider.url) #load forecast
+            Provider.raw_page = Provider.get_raw_page(Provider.URL) #load forecast
             location = Provider.get_current_location()
 
             for item in location:
@@ -216,19 +216,22 @@ def run_app(*args, Provider, forec):
             print('\n') #new line
 
             location_set = Provider.browse_location() #get new location
-            Provider.set_location(location_set) #set location to the config
-            config.load_config() #reload config
+            Provider.set_location(location_set) #set location to the Provider
+            config.weather_providers = config.set_config(Provider.Title,
+                                        Provider.get_instance_variables(),
+                                        config.weather_providers) #save new location to config
+
 
         if args[0].next:
-            Provider.raw_page = Provider.get_raw_page(Provider.url_next_day, force_reload) #load forecast
+            Provider.raw_page = Provider.get_raw_page(Provider.URL_next_day, force_reload) #load forecast
             info_next_day = Provider.get_next_day() #run if forecast called
             weather_info.update(info_next_day) #update with forecast
 
         if not args[0].next:
-            Provider.raw_page = Provider.get_raw_page(Provider.url, force_reload) #load a page
+            Provider.raw_page = Provider.get_raw_page(Provider.URL, force_reload) #load a page
             weather_info = Provider.get_info() #extract data from a page
             if forec:
-                Provider.raw_page = Provider.get_raw_page(Provider.url_hourly, force_reload) #load forecast
+                Provider.raw_page = Provider.get_raw_page(Provider.URL_hourly, force_reload) #load forecast
                 info_hourly = Provider.get_hourly() #run if forecast called
                 weather_info.update(info_hourly) #update with forecast
 
@@ -236,23 +239,26 @@ def run_app(*args, Provider, forec):
 
         if args[0].loc:
             location = []
-            print(f"Your current location:\n{Provider.location}\n")
+            print(f"Your current location:\n{Provider.Location}\n")
 
             #set_location_accu()
             location_set = Provider.browse_location()
             Provider.set_location(location_set) #set location to the config
-            config.load_config() #reload config
+            config.weather_providers = config.set_config(Provider.Title,
+                                        Provider.get_instance_variables(),
+                                        config.weather_providers) #save new location to config
+
 
         if args[0].next:
-            Provider.raw_page = Provider.get_raw_page(Provider.url, force_reload)
+            Provider.raw_page = Provider.get_raw_page(Provider.URL, force_reload)
             info_next_day = Provider.get_next_day()
             weather_info.update(info_next_day) #update with forecast
 
         if not args[0].next:
-            Provider.raw_page = Provider.get_raw_page(Provider.url, force_reload) #load a page
+            Provider.raw_page = Provider.get_raw_page(Provider.URL, force_reload) #load a page
             weather_info = Provider.get_info() #extract data from a page
             if forec:
-                Provider.raw_page = Provider.get_raw_page(Provider.url) #load forecast
+                Provider.raw_page = Provider.get_raw_page(Provider.URL) #load forecast
                 info_hourly = Provider.get_hourly() #run if forecast called
                 weather_info.update(info_hourly) #update with forecast
 
@@ -261,28 +267,31 @@ def run_app(*args, Provider, forec):
         if args[0].loc:
             #define current location of User
             location = []
-            print(f"Your current location:\n{Provider.location}\n")
+            print(f"Your current location:\n{Provider.Location}\n")
 
             #set_location_accu()
             location_set = Provider.browse_location()
             Provider.set_location(location_set) #set location to the config
-            config.load_config() #reload config
+            config.weather_providers = config.set_config(Provider.Title,
+                                        Provider.get_instance_variables(),
+                                        config.weather_providers) #save new location to config
+
 
         if args[0].next:
-            Provider.raw_page = Provider.get_raw_page(Provider.url, force_reload)
+            Provider.raw_page = Provider.get_raw_page(Provider.URL, force_reload)
             info_next_day = Provider.get_next_day()
             weather_info.update(info_next_day)
 
         if not args[0].next:
-            Provider.raw_page = Provider.get_raw_page(Provider.url, force_reload) #load a page
+            Provider.raw_page = Provider.get_raw_page(Provider.URL, force_reload) #load a page
             weather_info = Provider.get_info() #extract data from a page
             if forec:
-                Provider.raw_page = Provider.get_raw_page(Provider.url, force_reload) #load forecast
+                Provider.raw_page = Provider.get_raw_page(Provider.URL, force_reload) #load forecast
                 info_hourly = Provider.get_hourly() #run if forecast called
                 weather_info.update(info_hourly) #update with forecast
 
     try:
-        city = Provider.location
+        city = Provider.Location
     except KeyError:
         city = ''
 
@@ -304,15 +313,15 @@ def run_app(*args, Provider, forec):
         config.ACTUAL_WEATHER_INFO['RP5'] = weather_info
     if args[0].sin:
         config.ACTUAL_WEATHER_INFO['Sinoptik'] = weather_info
-
-    pass
+    print('AAAAA')
+    config.save_config(config.config)
 
 def main():
 
     args = take_args()
 
     if args.clear_cache:
-        clear_cache()
+        providers.WeatherProvider.clear_cache()
         return None
 
     if args.u: #sets updating interval
@@ -321,35 +330,16 @@ def main():
         return None
 
     if args.accu:
-        Accu = providers.AccuProvider(config.weather_providers['ACCU']['Title'],
-                            config.weather_providers['ACCU']['URL'],
-                            config.weather_providers['ACCU']['URL_locations'],
-                            config.weather_providers['ACCU']['Location'],
-                            config.weather_providers['ACCU']['Cache_path'],
-                            config.weather_providers['ACCU']['Caching_time'],
-                            config.weather_providers['ACCU']['URL_hourly'],
-                            config.weather_providers['ACCU']['URL_next_day']
-                            )
-
+        Accu = providers.AccuProvider()
+        Accu.initiate(config.weather_providers['ACCU'])
         run_app(args, Provider=Accu, forec=args.forec)
     if args.rp5:
-        RP5 = providers.RP5_Provider(config.weather_providers['RP5']['Title'],
-                                config.weather_providers['RP5']['URL'],
-                                config.weather_providers['RP5']['URL_locations'],
-                                config.weather_providers['RP5']['Location'],
-                                config.weather_providers['RP5']['Cache_path'],
-                                config.weather_providers['RP5']['Caching_time'],
-                                )
+        RP5 = providers.RP5_Provider()
+        RP5.initiate(config.weather_providers['RP5'])
         run_app(args, Provider=RP5, forec=args.forec)
     if args.sin:
-        Sinoptik = providers.SinoptikProvider(
-                                config.weather_providers['Sinoptik']['Title'],
-                                config.weather_providers['Sinoptik']['URL'],
-                                config.weather_providers['Sinoptik']['URL_locations'],
-                                config.weather_providers['Sinoptik']['Location'],
-                                config.weather_providers['Sinoptik']['Cache_path'],
-                                config.weather_providers['Sinoptik']['Caching_time'],
-                                )
+        Sinoptik = providers.SinoptikProvider()
+        Sinoptik.initiate(config.weather_providers['Sinoptik'])
         run_app(args, Provider=Sinoptik, forec=args.forec)
     if args.csv:
         save_csv(config.ACTUAL_WEATHER_INFO, args.csv)

@@ -10,13 +10,10 @@ import hashlib
 
 class WeatherProvider:
     """ Class for all weather providers"""
-    def __init__(self, Title, URL, URL_locations, Location, Cache_path, Caching_time):
-        self.title = Title
-        self.url = URL
-        self.url_locations = URL_locations
-        self.location = Location
-        self.cache_path = Cache_path
-        self.caching_time = Caching_time
+    def initiate(self, provider_data):
+        """ Sets instance variables for config """
+        for item in provider_data:
+            self.__setattr__(item, provider_data[item])
 
     def get_raw_page(self, URL, force_reload = False):
         """
@@ -42,7 +39,7 @@ class WeatherProvider:
         """ Gets cache file full path """
 
         filename = hashlib.md5(URL.encode('utf-8')).hexdigest() + '.wbc'
-        path = pathlib.Path(self.cache_path)
+        path = pathlib.Path(self.Cache_path)
         cache_file_path = path.joinpath(filename)
 
         return cache_file_path
@@ -93,7 +90,7 @@ class WeatherProvider:
 
         if cache_file.exists():
             cache_time = cache_file.stat().st_mtime
-            if time.time() < self.get_cache_time(URL) + self.caching_time * 60:
+            if time.time() < self.get_cache_time(URL) + self.Caching_time * 60:
                 cache_valid = True
             else:
                 cache_valid = False
@@ -118,15 +115,26 @@ class WeatherProvider:
         else:
             pass
 
+    def get_instance_variables(self):
+        """ Returns dictionary {self.variable: value} """
+
+        inst_variables = {}
+        attr_list = [x for x in dir(self) if not x.startswith('_')]
+        try:
+            attr_list.remove('raw_page') #if exists remove raw_page data
+        except ValueError:
+            pass
+
+        for item in attr_list:
+            if str(self.__getattribute__(item)).startswith('<bound method'):
+                pass
+            else:
+                inst_variables[item] = self.__getattribute__(item)
+
+        return inst_variables
+
 class AccuProvider(WeatherProvider):
     """ Special class for Accuweather"""
-
-    def __init__(self, Title, URL, URL_locations, Location, Cache_path, \
-                                    Caching_time, URL_hourly, URL_next_day):
-        super(AccuProvider, self).__init__(Title, URL, URL_locations,\
-                                        Location, Cache_path, Caching_time)
-        self.url_hourly = URL_hourly
-        self.url_next_day = URL_next_day
 
     """ ACCU methods """
     def get_info(self):
@@ -231,7 +239,7 @@ class AccuProvider(WeatherProvider):
             Returns collection of URLs: URL (current weather), URL_hourly and URL_next_day
         """
         if URL_location is None:
-            URL_location = self.url_locations
+            URL_location = self.URL_locations
 
         levels = ['continent', 'country', 'region', 'city'] #for user input and level check
         raw_page = self.get_raw_page(URL_location) #read locations
@@ -273,18 +281,12 @@ class AccuProvider(WeatherProvider):
     def set_location(self, location_set):
         """ Sets to the config ACCU location """
 
-        self.url = location_set['URL']
-        self.url_hourly = location_set['URL_hourly']
-        self.url_next_day = location_set['URL_next_day']
-        self.location = location_set['Location']
+        self.URL = location_set['URL']
+        self.URL_hourly = location_set['URL_hourly']
+        self.URL_next_day = location_set['URL_next_day']
+        self.Location = location_set['Location']
 
 class RP5_Provider(WeatherProvider):
-
-    def __init__(self, Title, URL, URL_locations, Location, Cache_path, \
-                                    Caching_time):
-        super(RP5_Provider, self).__init__(Title, URL, URL_locations,\
-                                        Location, Cache_path, Caching_time)
-        pass
 
     def get_info(self):
         """ Extracts data from RP5 loaded page
@@ -403,7 +405,7 @@ class RP5_Provider(WeatherProvider):
             Returns: URL (current weather), name of Location
         """
         if URL_location == None:
-            URL_location = self.url_locations
+            URL_location = self.URL_locations
 
         levels = ['country', 'region', 'city'] #for user input and level check
         location_set = {}
@@ -458,8 +460,8 @@ class RP5_Provider(WeatherProvider):
     def set_location(self, location_set):
         """ Sets RP5 location to the config """
 
-        self.url = location_set['URL']
-        self.location = location_set['Location']
+        self.URL = location_set['URL']
+        self.Location = location_set['Location']
 
     def search_location():
         """ Searches location typed by user through RP5 """
@@ -477,11 +479,6 @@ class RP5_Provider(WeatherProvider):
 
 class SinoptikProvider(WeatherProvider):
     """docstring for SinoptikProvider."""
-    def __init__(self, Title, URL, URL_locations, Location, Cache_path, \
-                                    Caching_time):
-        super(SinoptikProvider, self).__init__(Title, URL, URL_locations,\
-                                        Location, Cache_path, Caching_time)
-        pass
 
     def get_info(self):
         """ Extracts data from Sinoptik loaded page
@@ -560,7 +557,7 @@ class SinoptikProvider(WeatherProvider):
             Returns: URL (current weather), name of Location
         """
         if URL_location == None:
-            URL_location = self.url_locations
+            URL_location = self.URL_locations
 
         levels = ['continent', 'country', 'region', 'city'] #for user input and level check
         raw_page = self.get_raw_page(URL_location) #read locations
@@ -623,5 +620,5 @@ class SinoptikProvider(WeatherProvider):
     def set_location(self, location_set):
         """ Sets Sinoptik location to the config """
 
-        self.url = location_set['URL']
-        self.location = location_set['Location']
+        self.URL = location_set['URL']
+        self.Location = location_set['Location']
