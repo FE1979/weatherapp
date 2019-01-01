@@ -321,7 +321,10 @@ def main():
     args = take_args()
 
     if args.clear_cache:
-        providers.WeatherProvider.clear_cache()
+        AnyProvider = providers.WeatherProvider()
+        AnyProvider.Cache_path = config.weather_providers['ACCU']['Cache_path']
+        AnyProvider.clear_cache()
+        del AnyProvider
         return None
 
     if args.u: #sets updating interval
