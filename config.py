@@ -79,7 +79,7 @@ def load_config():
             elif key == 'Location': #if cyrillic titles than do not urllib.quote
                 weather_providers[item][key] = config[item][key]
             else: #if URL
-                weather_providers[item][key] = quote(config[item][key], safe='://')
+                weather_providers[item][key] = quote(config[item][key], safe='://?=')
 
     return config
 

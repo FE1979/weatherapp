@@ -186,8 +186,9 @@ class AccuProvider(WeatherProvider):
         regex = "  1?" #to remove unnessecary symbols
 
         soup = BeautifulSoup(self.raw_page, 'html.parser')
-
+        print(self.URL_next_day)
         next_day_forec = soup.find('div', id="detail-day-night") #find dey/night forecast panel
+
         day_forec = next_day_forec.find('div', class_="day") #day part
         night_forec = next_day_forec.find('div', class_='night') #night part
 

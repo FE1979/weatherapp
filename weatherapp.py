@@ -313,7 +313,7 @@ def run_app(*args, Provider, forec):
         config.ACTUAL_WEATHER_INFO['RP5'] = weather_info
     if args[0].sin:
         config.ACTUAL_WEATHER_INFO['Sinoptik'] = weather_info
-    print('AAAAA')
+    
     config.save_config(config.config)
 
 def main():
