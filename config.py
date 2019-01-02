@@ -52,11 +52,8 @@ def write_config(config):
     for item in WEATHER_PROVIDERS:
         config[item] = {}
         for key in WEATHER_PROVIDERS[item]:
-            if type(WEATHER_PROVIDERS[item][key]) == str:
-                config[item][key] = unquote(WEATHER_PROVIDERS[item][key])
-            elif type(WEATHER_PROVIDERS[item][key]) == int:
-                config[item][key] = str(WEATHER_PROVIDERS[item][key])
-
+                config[item][key] = unquote(str(WEATHER_PROVIDERS[item][key]))
+    
     return config
 
 def save_config(config):
@@ -84,7 +81,7 @@ def load_config(config):
                 weather_providers[item][key] = config[item][key]
             else: #if URL
                 weather_providers[item][key] = quote(config[item][key], safe="""://?=\ """)
-    print(weather_providers)
+
     return weather_providers
 
 def restore_config(config):
