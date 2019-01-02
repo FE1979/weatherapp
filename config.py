@@ -6,7 +6,8 @@ import pathlib
 import configparser
 
 """ Define global params """
-weather_providers = {
+#WEATHER_PROVIDERS used as default values for first start or settings container
+WEATHER_PROVIDERS = {
 'ACCU': {'Title': 'Accuweather',
         'URL': "https://www.accuweather.com/uk/ua/kyiv/324505/weather-forecast/324505",
         'URL_hourly': "https://www.accuweather.com/uk/ua/kyiv/324505/hourly-weather-forecast/324505",
@@ -34,90 +35,84 @@ weather_providers = {
 
 ACTUAL_WEATHER_INFO = {}
 ACTUAL_PRINTABLE_INFO = {}
-working_dir = pathlib.Path.cwd()
-Cache_path = pathlib.Path
-Caching_time = 60
+WORKING_DIR = pathlib.Path.cwd()
+CACHING_TIME = 60
 
-config = configparser.ConfigParser()
-config.optionxform = str
-config_path = 'weather_config.ini'
+CONFIG = configparser.ConfigParser()
+CONFIG.optionxform = str
+CONFIG_PATH = 'weather_config.ini'
 
 """ End of global params """
 
 """ Config settings and fuctions """
 
+def write_config(config):
+    """ writes WEATHER_PROVIDERS attributes to config """
+
+    for item in WEATHER_PROVIDERS:
+        config[item] = {}
+        for key in WEATHER_PROVIDERS[item]:
+            if type(WEATHER_PROVIDERS[item][key]) == str:
+                config[item][key] = unquote(WEATHER_PROVIDERS[item][key])
+            elif type(WEATHER_PROVIDERS[item][key]) == int:
+                config[item][key] = str(WEATHER_PROVIDERS[item][key])
+
+    return config
+
 def save_config(config):
     """ Saves config to file with current values """
 
-    for item in weather_providers:
-        for key in weather_providers[item]:
-            if type(weather_providers[item][key]) == str:
-                config[item][key] = unquote(weather_providers[item][key])
-            elif type(weather_providers[item][key]) == int:
-                config[item][key] = str(weather_providers[item][key])
+    config = write_config(config)
 
     with open('weather_config.ini', 'w') as f:
         config.write(f)
 
-def load_config():
-    """ Loads configuration
+def load_config(config):
+    """ Loads configuration to WEATHER_PROVIDERS
     """
-    global weather_providers
-    global config_path
-    global Cache_path
-    global Caching_time
+    weather_providers = {}
 
-    config.read(config_path)
+    config.read(CONFIG_PATH)
 
     #load configuration to the weather_providers dict
     for item in config:
+        weather_providers[item] = {}
         for key in config[item]:
             if key == 'Caching_time':
-                Caching_time = int(config[item][key])
-            elif key == 'Cache_path':
-                Cache_path = config[item][key]
+                weather_providers[item]['Caching_time'] = int(config[item][key])
             elif key == 'Location': #if cyrillic titles than do not urllib.quote
                 weather_providers[item][key] = config[item][key]
             else: #if URL
                 weather_providers[item][key] = quote(config[item][key], safe='://?=')
 
-    return config
+    return weather_providers
 
-def restore_config(weather_providers):
+def restore_config(config):
     """ Restores config with defaults """
-
+    """
     config['ACCU'] = {}
     config['Sinoptik'] = {}
     config['RP5'] = {}
-
-    for item in weather_providers:
-        for key in weather_providers[item]:
-            if type(weather_providers[item][key]) == str:
-                config[item][key] = unquote(weather_providers[item][key])
-            elif type(weather_providers[item][key]) == int:
-                config[item][key] = str(weather_providers[item][key])
-
     """
-    config['Cache']['Caching_interval'] = str(Caching_time)
-    config['Cache']['Cache_dir'] = 'Cache'
-    """
+
+    config = write_config(config)
+
     return config
 
-def initiate_config(config, weather_providers):
+def initiate_config(config):
     """ Initiates config
         Sets weather_providers and other conf variables
     """
-    config = configparser.ConfigParser()
-    config.optionxform = str
-    path = pathlib.Path(config_path)
+    weather_providers = {}
+    path = pathlib.Path(CONFIG_PATH)
 
     if not path.exists(): #create new config file with defaults
-        config = restore_config(weather_providers)
+        config = restore_config(config)
         save_config(config)
     else:
-        config = load_config()
+        weather_providers = load_config(config)
 
-    return config
+    return config, weather_providers
 
 def set_config(title, variables, weather_providers):
     """ Sets new config variables
@@ -138,7 +133,7 @@ def set_config(title, variables, weather_providers):
 
     return weather_providers
 
-config = initiate_config(config, weather_providers)
+CONFIG, WEATHER_PROVIDERS = initiate_config(CONFIG)
 
 if __name__ == "__main__":
     pass

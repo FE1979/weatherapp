@@ -217,9 +217,9 @@ def run_app(*args, Provider, forec):
 
             location_set = Provider.browse_location() #get new location
             Provider.set_location(location_set) #set location to the Provider
-            config.weather_providers = config.set_config(Provider.Title,
+            config.WEATHER_PROVIDERS = config.set_config(Provider.Title,
                                         Provider.get_instance_variables(),
-                                        config.weather_providers) #save new location to config
+                                        config.WEATHER_PROVIDERS) #save new location to config
 
 
         if args[0].next:
@@ -244,9 +244,9 @@ def run_app(*args, Provider, forec):
             #set_location_accu()
             location_set = Provider.browse_location()
             Provider.set_location(location_set) #set location to the config
-            config.weather_providers = config.set_config(Provider.Title,
+            config.WEATHER_PROVIDERS = config.set_config(Provider.Title,
                                         Provider.get_instance_variables(),
-                                        config.weather_providers) #save new location to config
+                                        config.WEATHER_PROVIDERS) #save new location to config
 
 
         if args[0].next:
@@ -272,9 +272,9 @@ def run_app(*args, Provider, forec):
             #set_location_accu()
             location_set = Provider.browse_location()
             Provider.set_location(location_set) #set location to the config
-            config.weather_providers = config.set_config(Provider.Title,
+            config.WEATHER_PROVIDERS = config.set_config(Provider.Title,
                                         Provider.get_instance_variables(),
-                                        config.weather_providers) #save new location to config
+                                        config.WEATHER_PROVIDERS) #save new location to config
 
 
         if args[0].next:
@@ -314,7 +314,7 @@ def run_app(*args, Provider, forec):
     if args[0].sin:
         config.ACTUAL_WEATHER_INFO['Sinoptik'] = weather_info
     
-    config.save_config(config.config)
+    config.save_config(config.CONFIG)
 
 def main():
 
@@ -322,34 +322,34 @@ def main():
 
     if args.clear_cache:
         AnyProvider = providers.WeatherProvider()
-        AnyProvider.Cache_path = config.weather_providers['ACCU']['Cache_path']
+        AnyProvider.Cache_path = config.WEATHER_PROVIDERS['ACCU']['Cache_path']
         AnyProvider.clear_cache()
         del AnyProvider
         return None
 
     if args.u: #sets updating interval
         config.Caching_time = args.u
-        config.save_config(config.config)
+        config.save_config(config.CONFIG)
         return None
 
     if args.accu:
         Accu = providers.AccuProvider()
-        Accu.initiate(config.weather_providers['ACCU'])
+        Accu.initiate(config.WEATHER_PROVIDERS['ACCU'])
         run_app(args, Provider=Accu, forec=args.forec)
     if args.rp5:
         RP5 = providers.RP5_Provider()
-        RP5.initiate(config.weather_providers['RP5'])
+        RP5.initiate(config.WEATHER_PROVIDERS['RP5'])
         run_app(args, Provider=RP5, forec=args.forec)
     if args.sin:
         Sinoptik = providers.SinoptikProvider()
-        Sinoptik.initiate(config.weather_providers['Sinoptik'])
+        Sinoptik.initiate(config.WEATHER_PROVIDERS['Sinoptik'])
         run_app(args, Provider=Sinoptik, forec=args.forec)
     if args.csv:
         save_csv(config.ACTUAL_WEATHER_INFO, args.csv)
     if args.save:
         save_txt(config.ACTUAL_PRINTABLE_INFO, args.save)
 
-    config.save_config(config.config)
+    config.save_config(config.CONFIG)
 
 if __name__ == "__main__":
     main()
