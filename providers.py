@@ -121,7 +121,7 @@ class WeatherProvider:
         inst_variables = {}
 
         for item in self.__dict__:
-            if item = 'raw_page':
+            if item == 'raw_page':
                 pass
             else:
                 inst_variables[item] = self.__getattribute__(item)
