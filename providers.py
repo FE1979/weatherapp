@@ -119,14 +119,9 @@ class WeatherProvider:
         """ Returns dictionary {self.variable: value} """
 
         inst_variables = {}
-        attr_list = [x for x in dir(self) if not x.startswith('_')]
-        try:
-            attr_list.remove('raw_page') #if exists remove raw_page data
-        except ValueError:
-            pass
 
-        for item in attr_list:
-            if str(self.__getattribute__(item)).startswith('<bound method'):
+        for item in self.__dict__:
+            if item = 'raw_page':
                 pass
             else:
                 inst_variables[item] = self.__getattribute__(item)
