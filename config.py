@@ -8,7 +8,7 @@ import configparser
 """ Define global params """
 #WEATHER_PROVIDERS used as default values for first start or settings container
 WEATHER_PROVIDERS = {
-'ACCU': {'Title': 'Accuweather',
+'Accuweather': {'Title': 'Accuweather',
         'URL': "https://www.accuweather.com/uk/ua/kyiv/324505/weather-forecast/324505",
         'URL_hourly': "https://www.accuweather.com/uk/ua/kyiv/324505/hourly-weather-forecast/324505",
         'URL_next_day': "https://www.accuweather.com/uk/ua/kyiv/324505/daily-weather-forecast/324505?day=2",
@@ -87,7 +87,7 @@ def load_config(config):
 def restore_config(config):
     """ Restores config with defaults """
     """
-    config['ACCU'] = {}
+    config['Accuweather'] = {}
     config['Sinoptik'] = {}
     config['RP5'] = {}
     """
@@ -120,7 +120,7 @@ def set_config(title, variables, weather_providers):
 
     if title == 'Accuweather':
         for item in variables:
-            weather_providers['ACCU'][item] = variables[item]
+            weather_providers['Accuweather'][item] = variables[item]
     elif title == 'RP5':
         for item in variables:
             weather_providers['RP5'][item] = variables[item]

@@ -4,12 +4,13 @@ from html import escape, unescape
 import argparse
 
 import config
-import providers
+from providermanager import ProviderManager
 
 class App:
 
     def __init__(self):
         self.args = self.take_args()
+        self.providermanager = ProviderManager()
 
     def take_args(self):
         """
@@ -193,7 +194,7 @@ class App:
     def main(self):
 
         if self.args.clear_cache:
-            AnyProvider = providers.WeatherProvider()
+            AnyProvider = self.providermanager._providers['Accuweather']
             AnyProvider.Cache_path = config.WEATHER_PROVIDERS['ACCU']['Cache_path']
             AnyProvider.clear_cache()
             del AnyProvider
@@ -204,18 +205,10 @@ class App:
             config.save_config(config.CONFIG)
             return None
 
-        if self.args.accu:
-            Accu = providers.AccuProvider()
-            Accu.initiate(config.WEATHER_PROVIDERS['ACCU'])
-            self.run_app(Accu)
-        if self.args.rp5:
-            RP5 = providers.RP5_Provider()
-            RP5.initiate(config.WEATHER_PROVIDERS['RP5'])
-            self.run_app(RP5)
-        if self.args.sin:
-            Sinoptik = providers.SinoptikProvider()
-            Sinoptik.initiate(config.WEATHER_PROVIDERS['Sinoptik'])
-            self.run_app(Sinoptik)
+        for title, provider in self.providermanager._providers.items():
+            provider.initiate(config.WEATHER_PROVIDERS[title])
+            self.run_app(provider)
+
         if self.args.csv:
             self.save_csv(config.ACTUAL_WEATHER_INFO, args.csv)
         if self.args.save:

@@ -132,6 +132,7 @@ class WeatherProvider:
 
 class AccuProvider(WeatherProvider):
     """ Special class for Accuweather"""
+    title = "Accuweather"
 
     """ ACCU methods """
     def get_info(self):
@@ -284,6 +285,9 @@ class AccuProvider(WeatherProvider):
         self.Location = location_set['Location']
 
 class RP5_Provider(WeatherProvider):
+    """ Class for RP5 """
+
+    title = "RP5"
 
     def get_info(self):
         """ Extracts data from RP5 loaded page
@@ -475,7 +479,9 @@ class RP5_Provider(WeatherProvider):
         print(PAGE_SEARCH)
 
 class SinoptikProvider(WeatherProvider):
-    """docstring for SinoptikProvider."""
+    """ Class for Sinoptik """
+
+    title = "Sinoptik"
 
     def get_info(self):
         """ Extracts data from Sinoptik loaded page
