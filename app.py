@@ -68,15 +68,8 @@ class App:
         """
 
         weather_info = {}
-        title = Provider.Title
 
-        if self.args.refresh: #if we force page reloading
-            force_reload = True
-        else:
-            force_reload = False
-
-
-        if title == 'Accuweather':
+        if Provider.title == 'Accuweather':
 
             if self.args.loc:
                 #define current location of User
@@ -112,7 +105,7 @@ class App:
                     info_hourly = Provider.get_hourly() #run if forecast called
                     weather_info.update(info_hourly) #update with forecast
 
-        elif title == 'RP5':
+        elif Provider.title == 'RP5':
 
             if self.args.loc:
                 location = []
@@ -140,7 +133,7 @@ class App:
                     info_hourly = Provider.get_hourly() #run if forecast called
                     weather_info.update(info_hourly) #update with forecast
 
-        elif title == 'Sinoptik':
+        elif Provider.title == 'Sinoptik':
 
             if self.args.loc:
                 #define current location of User
@@ -177,9 +170,9 @@ class App:
             city = ''
 
         if self.args.next:
-            title = title + ", прогноз на завтра, " + city
+            title = Provider.title + ", прогноз на завтра, " + city
         else:
-            title = title + ", поточна погода, " + city
+            title = Provider.title + ", поточна погода, " + city
 
         output_data = self.make_printable(weather_info) #create printable
         self.print_weather(output_data, title) #print weather info on a screen
