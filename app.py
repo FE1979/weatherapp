@@ -3,12 +3,15 @@
 from html import escape, unescape
 import argparse
 
+import config
+import providers
+
 class App:
 
-    
+    def __init__(self):
+        self.args = self.take_args()
 
-
-    def take_args():
+    def take_args(self):
         """
         Set, parse and manage CLI arguments
         """
@@ -59,7 +62,7 @@ class App:
 
         return args
 
-    def run_app(*args, Provider, forec):
+    def run_app(self, Provider):
         """
         Runs loading, scraping and printing out weather info depending on given flags
         """
@@ -67,7 +70,7 @@ class App:
         weather_info = {}
         title = Provider.Title
 
-        if args[0].refresh: #if we force page reloading
+        if self.args.refresh: #if we force page reloading
             force_reload = True
         else:
             force_reload = False
@@ -75,7 +78,7 @@ class App:
 
         if title == 'Accuweather':
 
-            if args[0].loc:
+            if self.args.loc:
                 #define current location of User
                 location = []
                 print('Your current location:')
@@ -93,26 +96,28 @@ class App:
                                             config.WEATHER_PROVIDERS) #save new location to config
 
 
-            if args[0].next:
-                Provider.raw_page = Provider.get_raw_page(Provider.URL_next_day, force_reload) #load forecast
+            if self.args.next:
+                Provider.raw_page = Provider.get_raw_page(Provider.URL_next_day,\
+                                            self.args.refresh) #load forecast
                 info_next_day = Provider.get_next_day() #run if forecast called
                 weather_info.update(info_next_day) #update with forecast
 
-            if not args[0].next:
-                Provider.raw_page = Provider.get_raw_page(Provider.URL, force_reload) #load a page
+            if not self.args.next:
+                Provider.raw_page = Provider.get_raw_page(Provider.URL, \
+                                                self.args.refresh) #load a page
                 weather_info = Provider.get_info() #extract data from a page
-                if forec:
-                    Provider.raw_page = Provider.get_raw_page(Provider.URL_hourly, force_reload) #load forecast
+                if self.args.forec:
+                    Provider.raw_page = Provider.get_raw_page(Provider.URL_hourly,
+                                                self.args.refresh) #load forecast
                     info_hourly = Provider.get_hourly() #run if forecast called
                     weather_info.update(info_hourly) #update with forecast
 
         elif title == 'RP5':
 
-            if args[0].loc:
+            if self.args.loc:
                 location = []
                 print(f"Your current location:\n{Provider.Location}\n")
 
-                #set_location_accu()
                 location_set = Provider.browse_location()
                 Provider.set_location(location_set) #set location to the config
                 config.WEATHER_PROVIDERS = config.set_config(Provider.Title,
@@ -120,22 +125,24 @@ class App:
                                             config.WEATHER_PROVIDERS) #save new location to config
 
 
-            if args[0].next:
-                Provider.raw_page = Provider.get_raw_page(Provider.URL, force_reload)
+            if self.args.next:
+                Provider.raw_page = Provider.get_raw_page(Provider.URL, \
+                                                self.args.refresh)
                 info_next_day = Provider.get_next_day()
                 weather_info.update(info_next_day) #update with forecast
 
-            if not args[0].next:
-                Provider.raw_page = Provider.get_raw_page(Provider.URL, force_reload) #load a page
+            if not self.args.next:
+                Provider.raw_page = Provider.get_raw_page(Provider.URL,\
+                                                self.args.refresh) #load a page
                 weather_info = Provider.get_info() #extract data from a page
-                if forec:
+                if self.args.forec:
                     Provider.raw_page = Provider.get_raw_page(Provider.URL) #load forecast
                     info_hourly = Provider.get_hourly() #run if forecast called
                     weather_info.update(info_hourly) #update with forecast
 
         elif title == 'Sinoptik':
 
-            if args[0].loc:
+            if self.args.loc:
                 #define current location of User
                 location = []
                 print(f"Your current location:\n{Provider.Location}\n")
@@ -148,16 +155,19 @@ class App:
                                             config.WEATHER_PROVIDERS) #save new location to config
 
 
-            if args[0].next:
-                Provider.raw_page = Provider.get_raw_page(Provider.URL, force_reload)
+            if self.args.next:
+                Provider.raw_page = Provider.get_raw_page(Provider.URL,\
+                                                            self.args.refresh)
                 info_next_day = Provider.get_next_day()
                 weather_info.update(info_next_day)
 
-            if not args[0].next:
-                Provider.raw_page = Provider.get_raw_page(Provider.URL, force_reload) #load a page
+            if not self.args.next:
+                Provider.raw_page = Provider.get_raw_page(Provider.URL, \
+                                                self.args.refresh) #load a page
                 weather_info = Provider.get_info() #extract data from a page
-                if forec:
-                    Provider.raw_page = Provider.get_raw_page(Provider.URL, force_reload) #load forecast
+                if self.args.forec:
+                    Provider.raw_page = Provider.get_raw_page(Provider.URL,\
+                                            self.args.refresh) #load forecast
                     info_hourly = Provider.get_hourly() #run if forecast called
                     weather_info.update(info_hourly) #update with forecast
 
@@ -166,58 +176,176 @@ class App:
         except KeyError:
             city = ''
 
-        if args[0].next:
+        if self.args.next:
             title = title + ", прогноз на завтра, " + city
         else:
             title = title + ", поточна погода, " + city
 
-        output_data = make_printable(weather_info) #create printable
-        print_weather(output_data, title) #print weather info on a screen
+        output_data = self.make_printable(weather_info) #create printable
+        self.print_weather(output_data, title) #print weather info on a screen
 
         """ save loaded data and caching"""
 
-        config.ACTUAL_PRINTABLE_INFO[title] = nice_output(output_data, title)
+        config.ACTUAL_PRINTABLE_INFO[title] = self.nice_output(output_data, title)
 
-        if args[0].accu:
+        if self.args.accu:
             config.ACTUAL_WEATHER_INFO['ACCU'] = weather_info
-        if args[0].rp5:
+        if self.args.rp5:
             config.ACTUAL_WEATHER_INFO['RP5'] = weather_info
-        if args[0].sin:
+        if self.args.sin:
             config.ACTUAL_WEATHER_INFO['Sinoptik'] = weather_info
 
         config.save_config(config.CONFIG)
 
-    def main():
+    def main(self):
 
-        args = take_args()
-
-        if args.clear_cache:
+        if self.args.clear_cache:
             AnyProvider = providers.WeatherProvider()
             AnyProvider.Cache_path = config.WEATHER_PROVIDERS['ACCU']['Cache_path']
             AnyProvider.clear_cache()
             del AnyProvider
             return None
 
-        if args.u: #sets updating interval
+        if self.args.u: #sets updating interval
             config.Caching_time = args.u
             config.save_config(config.CONFIG)
             return None
 
-        if args.accu:
+        if self.args.accu:
             Accu = providers.AccuProvider()
             Accu.initiate(config.WEATHER_PROVIDERS['ACCU'])
-            run_app(args, Provider=Accu, forec=args.forec)
-        if args.rp5:
+            self.run_app(Accu)
+        if self.args.rp5:
             RP5 = providers.RP5_Provider()
             RP5.initiate(config.WEATHER_PROVIDERS['RP5'])
-            run_app(args, Provider=RP5, forec=args.forec)
-        if args.sin:
+            self.run_app(RP5)
+        if self.args.sin:
             Sinoptik = providers.SinoptikProvider()
             Sinoptik.initiate(config.WEATHER_PROVIDERS['Sinoptik'])
-            run_app(args, Provider=Sinoptik, forec=args.forec)
-        if args.csv:
-            save_csv(config.ACTUAL_WEATHER_INFO, args.csv)
-        if args.save:
-            save_txt(config.ACTUAL_PRINTABLE_INFO, args.save)
+            self.run_app(Sinoptik)
+        if self.args.csv:
+            self.save_csv(config.ACTUAL_WEATHER_INFO, args.csv)
+        if self.args.save:
+            self.save_txt(config.ACTUAL_PRINTABLE_INFO, args.save)
 
         config.save_config(config.CONFIG)
+
+    """ Output functions """
+    def print_weather(self, output_data, title):
+        """
+        Prints weather on a screen
+        input data - list of two lists: headers and values
+        """
+        print(self.nice_output(output_data, title))
+
+    def nice_output(self, table_data, title):
+        """ This forms nice table output for printing or saving to the file
+        Replaced old create_table
+        """
+
+        nice_txt = ''
+        first_column_len = len(max(table_data[0], key = lambda item: len(item))) + 2
+        second_column_len = len(max(table_data[1], key = lambda item: len(item))) + 2
+        header_len = len(title)
+
+        if header_len > first_column_len + second_column_len:
+            second_column_len = header_len - first_column_len
+
+        width = first_column_len + second_column_len + 1
+        counter = len(table_data[0])
+        i = 0
+
+        #print top of table with title
+        nice_txt = '+' + '-'*(width) + '+' + '\n'
+        nice_txt = nice_txt + '|' + title.center(width, ' ') + '|' + '\n'
+        nice_txt = nice_txt +'+' + '-'*(first_column_len) \
+                            + '+' + '-'*(second_column_len) + '+' + '\n'
+
+        while i < counter: #print out headers and values
+            nice_txt = nice_txt \
+                + '| ' + str(table_data[0][i]).ljust(first_column_len-1, ' ')
+            nice_txt = nice_txt \
+                + '| ' + str(table_data[1][i]).ljust(second_column_len-1, ' ') + '|'
+            nice_txt = nice_txt + '\n'
+            i += 1
+            pass
+        #bottom line
+        nice_txt = nice_txt \
+                + '+' + '-'*(first_column_len) + '+' + '-'*(second_column_len) + '+'
+        #separation blank line
+        nice_txt = nice_txt + '\n'
+
+        return nice_txt
+
+    def make_printable(self, weather_info):
+        """ Transform weather data to printable format
+            headers_dict - translation dictionary
+            temperature_heads - to insert Celsius sign if needed
+            print_order - to define which way weather_info will show
+        """
+        headers_dict = {'Temperature': 'Температура',
+                        'RealFeel': 'Відчувається як',
+                        'Condition': 'На небі',
+                        'Max': 'Максимальна', 'Min': 'Мінімальна', 'Av': 'Середня',
+                        'Num': 'Прогноз на, годин',
+                        'Deg': f"{unescape('&deg')}C",
+                        'Next_day_temp': 'Максимальна вдень',
+                        'Next_day_temp_max': 'Максимальна вдень', #for RP5
+                        'Next_day_temp_min': 'Мінімальна вдень', #for RP5
+                        'Next_day_RF': 'Відчуватиметься вдень як',
+                        'Next_day_condition': 'На небі вдень буде',
+                        'Next_night_temp': 'Мінімальна вночі',
+                        'Next_night_RF': 'Відчуватиметься вночі як',
+                        'Next_night_condition': 'На небі вночі буде'}
+        temperature_heads = ['Temperature', 'RealFeel', 'Max', 'Min', 'Av',
+                            'Next_day_temp', 'Next_day_RF', 'Next_night_temp',
+                            'Next_night_RF', 'Next_day_temp_max', 'Next_day_temp_min']
+        print_order = ['Temperature', 'RealFeel', 'Condition', 'Num', 'Max', 'Min', 'Av',
+                        'Next_day_temp', 'Next_day_temp_max', 'Next_day_temp_min',
+                        'Next_day_RF', 'Next_day_condition',
+                        'Next_night_temp', 'Next_night_RF', 'Next_night_condition']
+        output_data = [[],[]]
+
+        for item in print_order: #in printing order
+            if item in weather_info.keys(): #if there is a data
+                if item in temperature_heads: #if we need to show Celsius
+                    output_data[0].append(headers_dict[item])
+                    if weather_info[item] != '': #if temp is not blank
+                        output_data[1].append(f"{weather_info[item]:.0f}" + ' ' + headers_dict['Deg'])
+                    else:
+                        output_data[1].append(f"{weather_info[item]}" + ' ' + headers_dict['Deg'])
+                else:
+                    output_data[0].append(headers_dict[item])
+                    output_data[1].append(str(weather_info[item]))
+            else:
+                pass
+
+        return output_data
+
+    def save_csv(self, ACTUAL_WEATHER_INFO, filename):
+        """ Saves weather info into comma-separated file
+        with two columns: head, data
+        new entry separated by new line sign"""
+        write_line = '' #container for writing a line in file
+        with open(filename+'.csv', 'w') as f:
+            for item in ACTUAL_WEATHER_INFO:
+                write_line = item +', ,\n' #header for next provider
+                f.write(write_line)
+                for item_data in ACTUAL_WEATHER_INFO[item]:
+                    write_line = item_data + ',' + \
+                    str(ACTUAL_WEATHER_INFO[item][item_data]) + '\n' #row head and data
+                    f.write(write_line)
+        pass
+
+    def save_txt(self, ACTUAL_PRINTABLE_INFO, filename):
+        """ Saves to txt file printable weather info """
+
+        with open(filename+'.txt', 'w') as f:
+            for item in ACTUAL_PRINTABLE_INFO:
+                f.write(ACTUAL_PRINTABLE_INFO[item])
+
+        pass
+
+if __name__ == "__main__":
+    Ap = App()
+    Ap.main()
