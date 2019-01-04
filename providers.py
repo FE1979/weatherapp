@@ -1,3 +1,5 @@
+""" Module with weatherprovider classes """
+
 from urllib.request import urlopen, Request
 from urllib.parse import quote, unquote
 from urllib import parse

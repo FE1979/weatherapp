@@ -53,7 +53,7 @@ def write_config(config):
         config[item] = {}
         for key in WEATHER_PROVIDERS[item]:
                 config[item][key] = unquote(str(WEATHER_PROVIDERS[item][key]))
-    
+
     return config
 
 def save_config(config):

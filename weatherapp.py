@@ -2,20 +2,8 @@
 Test project
 """
 
-from urllib.request import urlopen, Request
-from urllib.parse import quote, unquote
-from urllib import parse
 from html import escape, unescape
-from bs4 import BeautifulSoup
-import os
-import re
-import sys
-import time
-import pathlib
-import hashlib
 import argparse
-import configparser
-import json
 
 import config
 import providers
@@ -313,7 +301,7 @@ def run_app(*args, Provider, forec):
         config.ACTUAL_WEATHER_INFO['RP5'] = weather_info
     if args[0].sin:
         config.ACTUAL_WEATHER_INFO['Sinoptik'] = weather_info
-    
+
     config.save_config(config.CONFIG)
 
 def main():
