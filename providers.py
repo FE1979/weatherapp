@@ -10,6 +10,8 @@ import time
 import pathlib
 import hashlib
 
+import decorators
+
 class WeatherProvider:
     """ Class for all weather providers"""
     def initiate(self, provider_data):
@@ -61,6 +63,7 @@ class WeatherProvider:
             with open(cache_file, 'wb') as f:
                 f.write(data)
 
+    @decorators.run_time
     def get_cache_time(self, URL):
         """ Gets cache file creating time """
 
@@ -73,6 +76,7 @@ class WeatherProvider:
 
         return cache_time
 
+    @decorators.run_time
     def load_cache(self, URL):
         """ Loads cache for given URL """
 
@@ -83,6 +87,7 @@ class WeatherProvider:
 
         return PAGE
 
+    @decorators.run_time
     def valid_cache(self, URL):
         """ Returns True if cache file exists and valid
             False if not
@@ -102,6 +107,7 @@ class WeatherProvider:
 
         return cache_valid
 
+    @decorators.pause_moment
     def clear_cache(self):
         """ Removes cache directory """
 

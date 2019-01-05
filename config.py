@@ -5,6 +5,8 @@ from urllib.parse import quote, unquote
 import pathlib
 import configparser
 
+import decorators
+
 """ Define global params """
 #WEATHER_PROVIDERS used as default values for first start or settings container
 WEATHER_PROVIDERS = {
@@ -96,6 +98,7 @@ def restore_config(config):
 
     return config
 
+@decorators.show_variables
 def initiate_config(config):
     """ Initiates config
         Sets weather_providers and other conf variables

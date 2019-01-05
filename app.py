@@ -3,8 +3,9 @@
 from html import escape, unescape
 import argparse
 
-import config
 from providermanager import ProviderManager
+import config
+import decorators
 
 class App:
 
@@ -12,6 +13,7 @@ class App:
         self.args = self.take_args()
         self.providermanager = ProviderManager()
 
+    @decorators.run_time
     def take_args(self):
         """
         Set, parse and manage CLI arguments
@@ -63,6 +65,8 @@ class App:
 
         return args
 
+    @decorators.show_variables
+    @decorators.run_time
     def run_app(self, Provider):
         """
         Runs loading, scraping and printing out weather info depending on given flags
@@ -191,11 +195,12 @@ class App:
 
         config.save_config(config.CONFIG)
 
+    @decorators.pause
     def main(self):
 
         if self.args.clear_cache:
             AnyProvider = self.providermanager._providers['Accuweather']
-            AnyProvider.Cache_path = config.WEATHER_PROVIDERS['ACCU']['Cache_path']
+            AnyProvider.Cache_path = config.WEATHER_PROVIDERS['Accuweather']['Cache_path']
             AnyProvider.clear_cache()
             del AnyProvider
             return None
