@@ -222,6 +222,7 @@ class App:
         config.save_config(config.CONFIG)
 
     """ Output functions """
+
     def print_weather(self, output_data, title):
         """
         Prints weather on a screen
@@ -229,7 +230,8 @@ class App:
         """
         print(self.nice_output(output_data, title))
 
-    def nice_output(self, table_data, title):
+    @staticmethod
+    def nice_output(table_data, title):
         """ This forms nice table output for printing or saving to the file
         Replaced old create_table
         """
@@ -268,7 +270,8 @@ class App:
 
         return nice_txt
 
-    def make_printable(self, weather_info):
+    @staticmethod
+    def make_printable(weather_info):
         """ Transform weather data to printable format
             headers_dict - translation dictionary
             temperature_heads - to insert Celsius sign if needed
@@ -313,7 +316,8 @@ class App:
 
         return output_data
 
-    def save_csv(self, ACTUAL_WEATHER_INFO, filename):
+    @staticmethod
+    def save_csv(ACTUAL_WEATHER_INFO, filename):
         """ Saves weather info into comma-separated file
         with two columns: head, data
         new entry separated by new line sign"""
@@ -328,7 +332,8 @@ class App:
                     f.write(write_line)
         pass
 
-    def save_txt(self, ACTUAL_PRINTABLE_INFO, filename):
+    @staticmethod
+    def save_txt(ACTUAL_PRINTABLE_INFO, filename):
         """ Saves to txt file printable weather info """
 
         with open(filename+'.txt', 'w') as f:
