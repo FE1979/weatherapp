@@ -273,6 +273,8 @@ class App:
         return nice_txt
 
     @staticmethod
+    @decorators.times_called
+    @decorators.function_cache
     def make_printable(weather_info):
         """ Transform weather data to printable format
             headers_dict - translation dictionary
@@ -347,3 +349,4 @@ class App:
 if __name__ == "__main__":
     Ap = App()
     Ap.main()
+    print(decorators.FUNCTIONS_CACHE)

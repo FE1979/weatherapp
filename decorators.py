@@ -2,6 +2,10 @@
 
 import time
 
+""" Globals """
+
+FUNCTIONS_CACHE = {}
+
 def pause_moment(func, *args, **kwargs):
     """ Pause for 1 second """
     def wrapper(*args, **kwargs):
@@ -59,4 +63,12 @@ def times_called(func, count = 0, *args, **kwargs):
     count += 1
     print(f'Function {func.__name__} was called {count} times')
 
+    return wrapper
+
+def function_cache(func, count = 0, *args, **kwargs):
+    """ Saves to global FUNCTIONS_CACHE result of called function """
+    def wrapper(*args, **kwargs):
+        res = func(*args, *kwargs)
+        FUNCTIONS_CACHE[f"{func.__name__}_{count}"] = res
+        return res
     return wrapper

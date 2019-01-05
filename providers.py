@@ -124,6 +124,7 @@ class WeatherProvider:
         else:
             pass
 
+    @decorators.function_cache
     def get_instance_variables(self):
         """ Returns dictionary {self.variable: value} """
 
