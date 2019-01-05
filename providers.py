@@ -19,6 +19,7 @@ class WeatherProvider:
         for item in provider_data:
             self.__setattr__(item, provider_data[item])
 
+    @decorators.times_called
     def get_raw_page(self, URL, force_reload = False):
         """
         Loads a page from given URL
@@ -63,7 +64,7 @@ class WeatherProvider:
             with open(cache_file, 'wb') as f:
                 f.write(data)
 
-    @decorators.run_time
+    @decorators.times_called
     def get_cache_time(self, URL):
         """ Gets cache file creating time """
 
@@ -141,6 +142,8 @@ class AccuProvider(WeatherProvider):
     title = "Accuweather"
 
     """ ACCU methods """
+
+    @decorators.times_called
     def get_info(self):
         """ Extracts weather info from ACCUWEATHER loaded page using BS4
             returns info in dictionary: Temperature, Condition, RealFeel

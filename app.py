@@ -67,6 +67,7 @@ class App:
 
     @decorators.show_variables
     @decorators.run_time
+    @decorators.times_called
     def run_app(self, Provider):
         """
         Runs loading, scraping and printing out weather info depending on given flags
@@ -223,6 +224,7 @@ class App:
 
     """ Output functions """
 
+    @decorators.times_called
     def print_weather(self, output_data, title):
         """
         Prints weather on a screen

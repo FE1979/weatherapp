@@ -49,3 +49,14 @@ def show_variables(func, *args, **kwargs):
         res = func(*args, **kwargs)
         return res
     return wrapper
+
+
+def times_called(func, count = 0, *args, **kwargs):
+    """ Counts function calling times """
+    def wrapper(*args, **kwargs):
+        res = func(*args, **kwargs)
+        return res
+    count += 1
+    print(f'Function {func.__name__} was called {count} times')
+
+    return wrapper
