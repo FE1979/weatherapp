@@ -19,7 +19,6 @@ class WeatherProvider:
         for item in provider_data:
             self.__setattr__(item, provider_data[item])
 
-    @decorators.times_called
     def get_raw_page(self, URL, force_reload = False):
         """
         Loads a page from given URL
@@ -64,7 +63,6 @@ class WeatherProvider:
             with open(cache_file, 'wb') as f:
                 f.write(data)
 
-    @decorators.times_called
     def get_cache_time(self, URL):
         """ Gets cache file creating time """
 
@@ -77,7 +75,6 @@ class WeatherProvider:
 
         return cache_time
 
-    @decorators.run_time
     def load_cache(self, URL):
         """ Loads cache for given URL """
 
@@ -88,7 +85,6 @@ class WeatherProvider:
 
         return PAGE
 
-    @decorators.run_time
     def valid_cache(self, URL):
         """ Returns True if cache file exists and valid
             False if not
@@ -108,7 +104,6 @@ class WeatherProvider:
 
         return cache_valid
 
-    @decorators.pause_moment
     def clear_cache(self):
         """ Removes cache directory """
 
@@ -124,7 +119,6 @@ class WeatherProvider:
         else:
             pass
 
-    @decorators.function_cache
     def get_instance_variables(self):
         """ Returns dictionary {self.variable: value} """
 
@@ -144,7 +138,6 @@ class AccuProvider(WeatherProvider):
 
     """ ACCU methods """
 
-    @decorators.times_called
     def get_info(self):
         """ Extracts weather info from ACCUWEATHER loaded page using BS4
             returns info in dictionary: Temperature, Condition, RealFeel

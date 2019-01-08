@@ -20,7 +20,7 @@ def pause(func, *args, **kwargs):
     def wrapper(*args, **kwargs):
         pause_time = int(input("Enter time in second to pause\n"))
         for i in range(pause_time):
-            print(i, end=" ")
+            print(i, end=" ", flush=True)
             time.sleep(1)
         print("\n")
         res = func(*args, **kwargs)
@@ -70,5 +70,15 @@ def function_cache(func, count = 0, *args, **kwargs):
     def wrapper(*args, **kwargs):
         res = func(*args, *kwargs)
         FUNCTIONS_CACHE[f"{func.__name__}_{count}"] = res
+        return res
+    return wrapper
+
+def show_loading(func, *args, **kwargs):
+    def wrapper(*args, **kwargs):
+        for i in range(10):
+            print(".", end="", flush=True)
+            time.sleep(0.3)
+        print('\n')
+        res = func(*args, **kwargs)
         return res
     return wrapper

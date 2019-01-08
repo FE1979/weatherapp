@@ -13,7 +13,7 @@ class App:
         self.args = self.take_args()
         self.providermanager = ProviderManager()
 
-    @decorators.run_time
+
     def take_args(self):
         """
         Set, parse and manage CLI arguments
@@ -65,9 +65,6 @@ class App:
 
         return args
 
-    @decorators.show_variables
-    @decorators.run_time
-    @decorators.times_called
     def run_app(self, Provider):
         """
         Runs loading, scraping and printing out weather info depending on given flags
@@ -196,7 +193,7 @@ class App:
 
         config.save_config(config.CONFIG)
 
-    @decorators.pause
+    @decorators.show_loading
     def main(self):
 
         if self.args.clear_cache:
@@ -224,7 +221,6 @@ class App:
 
     """ Output functions """
 
-    @decorators.times_called
     def print_weather(self, output_data, title):
         """
         Prints weather on a screen
@@ -273,8 +269,6 @@ class App:
         return nice_txt
 
     @staticmethod
-    @decorators.times_called
-    @decorators.function_cache
     def make_printable(weather_info):
         """ Transform weather data to printable format
             headers_dict - translation dictionary
@@ -349,4 +343,3 @@ class App:
 if __name__ == "__main__":
     Ap = App()
     Ap.main()
-    print(decorators.FUNCTIONS_CACHE)

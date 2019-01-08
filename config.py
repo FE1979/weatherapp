@@ -97,8 +97,7 @@ def restore_config(config):
     config = write_config(config)
 
     return config
-
-@decorators.show_variables
+    
 def initiate_config(config):
     """ Initiates config
         Sets weather_providers and other conf variables
