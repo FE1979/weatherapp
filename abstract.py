@@ -27,7 +27,7 @@ class Command(abc.ABC):
         """
 
 class Configure(Command):
-
+    """ Command for application configuration """
     pass
 
 class WeatherProvider(Command):
