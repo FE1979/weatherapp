@@ -12,7 +12,7 @@ class App:
 
     def __init__(self):
         self.args = self.take_args()
-        self.providermanager = ProviderManager()
+        self.providers = ProviderManager()
         self.commands = CommandManager().commands
 
 
@@ -26,9 +26,9 @@ class App:
             and, optionaly, temperature forecast""",
             usage="""weatherapp -provider -forecast -csv/-save [file_name]""")
 
-        parser.add_argument("command", default="All",
+        parser.add_argument("command",
                             help="All - runs specified provider. If not specified runs all switched on",
-                            nargs="*")
+                            nargs="?")
 
         parser.add_argument("-csv", metavar="[filename]",
                             help="Export weather info to CSV formatted file",
@@ -176,11 +176,20 @@ class App:
     #@decorators.show_loading
     def main(self):
 
-        command = self.args.command[0]
+        command = self.args.command
 
         if command in self.commands.keys():
             command_factory = self.commands.get(command, None)
             command_factory(self).run()
+
+        if command in self.providers._providers.keys():
+            provider.initiate(config.WEATHER_PROVIDERS[command])
+            self.run_app(provider)
+
+        if not command:
+            for title, provider in self.providers._providers.items():
+                provider.initiate(config.WEATHER_PROVIDERS[title])
+                self.run_app(provider)
 
         if self.args.clear_cache:
             AnyProvider = self.providermanager._providers['Accuweather']
@@ -188,10 +197,6 @@ class App:
             AnyProvider.clear_cache()
             del AnyProvider
             return None
-
-        for title, provider in self.providermanager._providers.items():
-            provider.initiate(config.WEATHER_PROVIDERS[title])
-            self.run_app(provider)
 
         if self.args.csv:
             self.save_csv(config.ACTUAL_WEATHER_INFO, args.csv)

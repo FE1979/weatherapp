@@ -1,6 +1,6 @@
 """ Application command manager """
 
-from commands import All, ConfigureApp, Configure
+from commands import Any, ConfigureApp, Configure
 
 class CommandManager:
     """ Container for commands """
@@ -12,5 +12,5 @@ class CommandManager:
     def _load_commands(self):
         """ Loads commands from commands.py """
 
-        for item in [All, ConfigureApp, Configure]:
+        for item in [Any, ConfigureApp, Configure]:
             self.commands[item.name] = item
