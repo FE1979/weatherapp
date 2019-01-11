@@ -4,6 +4,7 @@ from html import escape, unescape
 import argparse
 
 from providermanager import ProviderManager
+from commandmanager import CommandManager
 import config
 import decorators
 
@@ -12,6 +13,7 @@ class App:
     def __init__(self):
         self.args = self.take_args()
         self.providermanager = ProviderManager()
+        self.commands = CommandManager().commands
 
 
     def take_args(self):
@@ -23,15 +25,10 @@ class App:
             description="""A program shows you current weather condition in Kyiv
             and, optionaly, temperature forecast""",
             usage="""weatherapp -provider -forecast -csv/-save [file_name]""")
-    
-        parser.add_argument("-al", "--all", help="Shows weather from all providers",
-                            action="store_true", default=True) #Providers
-        parser.add_argument("-a", "--accu", help="Weather from Accuweather",
-                            action="store_true") #Providers
-        parser.add_argument("-r", "--rp5", help="Weather from RP5",
-                            action="store_true") #Providers
-        parser.add_argument("-s", "--sin", help="Weather from Sinoptik",
-                            action="store_true") #Providers
+
+        parser.add_argument("command", default="All",
+                            help="All - runs specified provider. If not specified runs all switched on",
+                            nargs="*")
 
         parser.add_argument("-csv", metavar="[filename]",
                             help="Export weather info to CSV formatted file",
@@ -42,16 +39,9 @@ class App:
         parser.add_argument("--clear-cache", help="Remove cache files and directory",
                             action="store_true") #App command
 
-
         args = parser.parse_args()
 
-        if args.accu or args.rp5 or args.sin: args.all = False #switch all to False if any of providers called
-
-        if args.all:
-            args.accu = args.rp5 = args.sin = True #make all shown
-
-        if args.noforec:
-            args.forec = False #set forecast not to show
+        print(args)
 
         return args
 
@@ -183,19 +173,20 @@ class App:
 
         config.save_config(config.CONFIG)
 
-    @decorators.show_loading
+    #@decorators.show_loading
     def main(self):
+
+        command = self.args.command[0]
+
+        if command in self.commands.keys():
+            command_factory = self.commands.get(command, None)
+            command_factory(self).run()
 
         if self.args.clear_cache:
             AnyProvider = self.providermanager._providers['Accuweather']
             AnyProvider.Cache_path = config.WEATHER_PROVIDERS['Accuweather']['Cache_path']
             AnyProvider.clear_cache()
             del AnyProvider
-            return None
-
-        if self.args.u: #sets updating interval
-            config.Caching_time = args.u
-            config.save_config(config.CONFIG)
             return None
 
         for title, provider in self.providermanager._providers.items():
