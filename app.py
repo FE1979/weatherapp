@@ -23,7 +23,7 @@ class App:
             description="""A program shows you current weather condition in Kyiv
             and, optionaly, temperature forecast""",
             usage="""weatherapp -provider -forecast -csv/-save [file_name]""")
-
+    
         parser.add_argument("-al", "--all", help="Shows weather from all providers",
                             action="store_true", default=True) #Providers
         parser.add_argument("-a", "--accu", help="Weather from Accuweather",
@@ -32,23 +32,6 @@ class App:
                             action="store_true") #Providers
         parser.add_argument("-s", "--sin", help="Weather from Sinoptik",
                             action="store_true") #Providers
-
-        parser.add_argument("-next", help="Next day forecast (ACCU only)",
-                            action="store_true") #Provider option
-        group = parser.add_mutually_exclusive_group()
-        group.add_argument("-f", "--forec", help="Display forecast for next hours",
-                            action="store_true", default=True) #Provider option
-        group.add_argument("-nf", "--noforec", help="Do not display forecast for next hours",
-                            action='store_true') #Provider option
-        parser.add_argument("-refresh", help="Force reloading pages",
-                            action="store_true") #Provider option
-
-        parser.add_argument("-loc", help="Browse and set location. ACCU only.",
-                            action="store_true") #Provider configuration
-        parser.add_argument("-u", metavar="[minutes]",
-                            help="Set updating interval in minutes", type=int)
-                            # Provider configuration
-
 
         parser.add_argument("-csv", metavar="[filename]",
                             help="Export weather info to CSV formatted file",
