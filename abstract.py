@@ -26,10 +26,6 @@ class Command(abc.ABC):
             Should be overriden
         """
 
-class Configure(Command):
-    """ Command for application configuration """
-    pass
-
 class WeatherProvider(Command):
     """ WeatherProvider abstract class """
 
@@ -40,85 +36,162 @@ class WeatherProvider(Command):
         self.location = location
         self.url = url
 
-    @abc.abstractmethod
-    def get_name(self):
-        """ Provider name """
+    def initiate(self, provider_data):
+        """ Sets instance variables for config """
+        for item in provider_data:
+            self.__setattr__(item, provider_data[item])
 
-    @abc.abstractmethod
-    def get_default_location(self):
-        """ default location name """
-
-    @abc.abstractmethod
-    def get_default_url(self):
-        """ Default location url """
-
-    @abc.abstractmethod
-    def configurate(self):
-        """ Performs provider configuration """
-
-    @abc.abstractmethod
-    def get_weather_info(self, content):
-        """ Collects weather information """
-
-    @staticmethod
-    def get_configuration_file():
-        """ Path to configuration file """
-        return Path.home / config.CONFIG_PATH
-
-    def _get_configuration(self):
-        """ Returns configured location name and url
-            Raise 'ProviderConfigurationError' if configuration is
-            broken or wasn't found
+    def get_raw_page(self, URL, force_reload = False):
+        """
+        Loads a page from given URL
         """
 
-        name = self.get_default_location()
-        url = self.get_default_url()
-        confguration = configparser.ConfigParser()
+        if not self.valid_cache(URL) or force_reload:
 
-        try:
-            configuration.read(self.get_configuration_file())
-        except configparser.Error:
-            print(f"Bad configuration file."
-                  f"Please reconfigurate your provider: {self.get_name()}")
+            HEAD = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:63.0) Gecko/201'}
+            INFO_REQUEST = Request(URL, headers = HEAD)
+            PAGE = urlopen(INFO_REQUEST).read()
 
-        if self.get_name() in configuration.sections():
-            location_config = configuration[self.get_name()]
-            name, url = location_config['name'], location_config['url']
+            self.save_cache(PAGE, URL)
 
-        return name, url
+        else:
+            PAGE = self.load_cache(URL)
 
-    def save_configuration(self, name, url):
-        """ Save selected location to configuration file """
+        PAGE = str(PAGE, encoding = 'utf-8')
 
-        parser = configparser.ConfigParser()
-        config_file = self.get_configuration_file()
+        return PAGE
 
-        if config_file.exists():
-            parser.read(config_file)
+    def get_cache_file_path(self, URL):
+        """ Gets cache file full path """
 
-        parser[self.get_name()] = {'name': name, 'url': url}
-        with open(config_file, 'w') as configfile:
-            parser.write(configfile)
+        filename = hashlib.md5(URL.encode('utf-8')).hexdigest() + '.wbc'
+        path = pathlib.Path(self.Cache_path)
+        cache_file_path = path.joinpath(filename)
 
-    @staticmethod
-    def get_request_headers():
-        """ Return custom headers for url requests """
-        return {'User-Agent': config.FAKE_MOZILLA_AGENT}
+        return cache_file_path
 
-    @staticmethod
-    def get_url_hash(url):
-        """ Generate url hash """
-        return hashlib.md5(url.encode('utf-8')).hexdigest()
+    def save_cache(self, data, URL):
+        """ Saves data to cache file in cache directory
+            located in application directory
+        """
 
-    @staticmethod
-    def get_cache_directory():
-        """ Return home directory for cache file """
-        return Path.home() / config.CACHE_DIR
+        cache_file = self.get_cache_file_path(URL)
 
-    def save_cache():
+        if cache_file.parent.exists():
+            with open(cache_file, 'wb') as f:
+                f.write(data)
+        else:
+            os.mkdir(cache_file.parent)
+            with open(cache_file, 'wb') as f:
+                f.write(data)
+
+    def get_cache_time(self, URL):
+        """ Gets cache file creating time """
+
+        cache_file = self.get_cache_file_path(URL)
+
+        if cache_file.exists():
+            cache_time = cache_file.stat().st_mtime
+        else:
+            cache_time = 0
+
+        return cache_time
+
+    def load_cache(self, URL):
+        """ Loads cache for given URL """
+
+        cache_file = self.get_cache_file_path(URL)
+
+        with open(cache_file, 'rb') as f:
+            PAGE = f.read()
+
+        return PAGE
+
+    def valid_cache(self, URL):
+        """ Returns True if cache file exists and valid
+            False if not
+        """
+
+        cache_file = self.get_cache_file_path(URL)
+
+        if cache_file.exists():
+            cache_time = cache_file.stat().st_mtime
+            if time.time() < self.get_cache_time(URL) + self.Caching_time * 60:
+                cache_valid = True
+            else:
+                cache_valid = False
+
+        else:
+            cache_valid = False
+
+        return cache_valid
+
+    def clear_cache(self):
+        """ Removes cache directory """
+
+        path = pathlib.Path(self.Cache_path)
+
+        answer = input('Do you really want to remove all cache files with directory? Y/N\n')
+        if answer.lower() == 'y':
+            for item in list(path.glob('*.*')):
+                item.unlink()
+            print('Files removed')
+            path.rmdir()
+            print('Directory removed')
+        else:
+            pass
+
+    def get_instance_variables(self):
+        """ Returns dictionary {self.variable: value} """
+
+        inst_variables = {}
+
+        for item in self.__dict__:
+            if item == 'raw_page':
+                pass
+            else:
+                inst_variables[item] = self.__getattribute__(item)
+
+        return inst_variables
+
+    @abc.abstractmethod
+    def get_info(self):
+        """ Extracts weather info from loaded page using BS4
+            returns info in dictionary: Temperature, Condition, RealFeel
+
+            Should be overriden
+        """
         pass
 
-    def run(self, argv):
-        """ Run provider """
-        content = self.get_raw_page(self.url)
-        return self.get_info(content)
+    @abc.abstractmethod
+    def get_hourly(self):
+        """ Gets temperature forecast for next hours
+
+        """
+        pass
+
+    @abc.abstractmethod
+    def get_next_day(self):
+        """ Extracts weather info for next day
+        """
+        pass
+    @abc.abstractmethod
+    def get_current_location(self):
+
+        """ Returns current location
+        """
+        pass
+
+    @abc.abstractmethod
+    def browse_location(self, level = 0, URL_location = None):
+        """ Browse locations of weather provider
+        """
+
+    @abc.abstractmethod
+    def set_location(self, location_set):
+        """ Sets to the config location """
+
+        @abc.abstractmethod
+
+    def run(self):
+        """ Main function that runs WeatherProvider class """
