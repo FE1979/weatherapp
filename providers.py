@@ -10,7 +10,7 @@ import time
 import pathlib
 import hashlib
 
-import abstract
+from abstract import WeatherProvider
 import decorators
 
 class AccuProvider(WeatherProvider):
@@ -167,11 +167,6 @@ class AccuProvider(WeatherProvider):
         self.URL_hourly = location_set['URL_hourly']
         self.URL_next_day = location_set['URL_next_day']
         self.Location = location_set['Location']
-
-    def run(self, args):
-        parser = self.get_parser()
-
-        self.raw_page = self.get_raw_page
 
 class RP5_Provider(WeatherProvider):
     """ Class for RP5 """

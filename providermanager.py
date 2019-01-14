@@ -13,7 +13,7 @@ class ProviderManager:
         """
 
         for provider in [AccuProvider, RP5_Provider, SinoptikProvider]:
-            self.add(provider.title, provider())
+            self.add(provider.title, provider)
 
     def add(self, name, provider):
         """ Add provider

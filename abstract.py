@@ -1,7 +1,15 @@
 """ Abstract classes for weatherapp project """
 
+from urllib.request import urlopen, Request
+from urllib.parse import quote, unquote
+from urllib import parse
+from bs4 import BeautifulSoup
+
+
 import abc
 import pathlib
+import hashlib
+import time
 import argparse
 import configparser
 
@@ -32,14 +40,12 @@ class WeatherProvider(Command):
     def __init__(self, app):
         super().__init__(app) #отримуємо App з базового класу
 
-        location, url = self._getconfiguration() #отримуємо конфігурацію
-        self.location = location
-        self.url = url
+        self.initiate()
 
-    def initiate(self, provider_data):
-        """ Sets instance variables for config """
-        for item in provider_data:
-            self.__setattr__(item, provider_data[item])
+    def initiate(self):
+        """ Sets instance variables from config """
+        for item in config.WEATHER_PROVIDERS[self.title]:
+            self.__setattr__(item, config.WEATHER_PROVIDERS[self.title][item])
 
     def get_raw_page(self, URL, force_reload = False):
         """
@@ -192,10 +198,10 @@ class WeatherProvider(Command):
     def set_location(self, location_set):
         """ Sets to the config location """
 
-    def get_cli_args(self, remaining_args):
+    def get_cli_args(self):
         """ Parse remaining arguments """
 
-        parser = parser.ArgumentParser()
+        parser = argparse.ArgumentParser()
         parser.add_argument("-next", help="Next day forecast (ACCU only)",
                     action="store_true") #Provider option
         group = parser.add_mutually_exclusive_group()
@@ -205,13 +211,13 @@ class WeatherProvider(Command):
                             action='store_true') #Provider option
         parser.add_argument("-refresh", help="Force reloading pages",
                             action="store_true") #Provider option
-        self.args = parser.parse_args()
+        self.args = parser.parse_args(self.app.remaining_args)
 
-    def run(self, remaining_args):
+    def run(self):
         weather_info = {}
         title = self.title
         city = self.Location
-        self.get_cli_args(self, remaining_args)
+        self.get_cli_args()
         refresh = self.args.refresh
 
         if self.args.next:

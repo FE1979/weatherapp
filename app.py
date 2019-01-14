@@ -192,8 +192,8 @@ class App:
 
         if not command:
             for title, provider in self.providers._providers.items():
-                provider.initiate(config.WEATHER_PROVIDERS[title])
-                weather_info, title = provider.run(self.remaining_args)
+                #provider(self)
+                weather_info, title = provider(self).run()
                 output_data = self.make_printable(weather_info) #create printable
                 self.print_weather(output_data, title) #print weather info on a screen
 
