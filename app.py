@@ -184,6 +184,7 @@ class App:
             command_factory(self).run()
 
         if command in self.providers._providers.keys():
+            provider = self.providers._providers.get(command)
             weather_info, title = provider(self).run()
             output_data = self.make_printable(weather_info) #create printable
             self.print_weather(output_data, title) #print weather info on a screen
