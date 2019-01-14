@@ -168,6 +168,11 @@ class AccuProvider(WeatherProvider):
         self.URL_next_day = location_set['URL_next_day']
         self.Location = location_set['Location']
 
+    def run(self, args):
+        parser = self.get_parser()
+
+        self.raw_page = self.get_raw_page
+
 class RP5_Provider(WeatherProvider):
     """ Class for RP5 """
 

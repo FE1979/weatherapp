@@ -175,6 +175,7 @@ class WeatherProvider(Command):
         """ Extracts weather info for next day
         """
         pass
+
     @abc.abstractmethod
     def get_current_location(self):
 
@@ -191,7 +192,40 @@ class WeatherProvider(Command):
     def set_location(self, location_set):
         """ Sets to the config location """
 
-        @abc.abstractmethod
+    def get_cli_args(self, remaining_args):
+        """ Parse remaining arguments """
 
-    def run(self):
-        """ Main function that runs WeatherProvider class """
+        parser = parser.ArgumentParser()
+        parser.add_argument("-next", help="Next day forecast (ACCU only)",
+                    action="store_true") #Provider option
+        group = parser.add_mutually_exclusive_group()
+        group.add_argument("-f", "--forec", help="Display forecast for next hours",
+                            action="store_true", default=True) #Provider option
+        group.add_argument("-nf", "--noforec", help="Do not display forecast for next hours",
+                            action='store_true') #Provider option
+        parser.add_argument("-refresh", help="Force reloading pages",
+                            action="store_true") #Provider option
+        self.args = parser.parse_args()
+
+    def run(self, remaining_args):
+        weather_info = {}
+        title = self.title
+        city = self.Location
+        self.get_cli_args(self, remaining_args)
+        refresh = self.args.refresh
+
+        if self.args.next:
+            self.raw_page = self.get_raw_page(self.URL_next_day, refresh)
+            info_next_day = self.get_next_day()
+            weather_info.update(info_next_day)
+            title = title + ", прогноз на завтра, " + city
+
+        if not self.args.next:
+            self.raw_page = self.get_raw_page(self.URL, refresh)
+            weather_info.update(self.get_info())
+            title = title + ", поточна погода, " + city
+            if self.args.forec:
+                self.raw_page = self.get_raw_page(self.URL_hourly, refresh)
+                info_hourly = self.get_hourly()
+
+        return weather_info, title

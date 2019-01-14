@@ -11,7 +11,7 @@ import decorators
 class App:
 
     def __init__(self):
-        self.args = self.take_args()
+        self.args, self.remaining_args = self.take_args()
         self.providers = ProviderManager()
         self.commands = CommandManager().commands
 
@@ -39,11 +39,11 @@ class App:
         parser.add_argument("--clear-cache", help="Remove cache files and directory",
                             action="store_true") #App command
 
-        args = parser.parse_args()
+        args, remaining_args = parser.parse_known_args()
 
         print(args)
 
-        return args
+        return args, remaining_args
 
     def run_app(self, Provider):
         """
@@ -175,6 +175,8 @@ class App:
 
     #@decorators.show_loading
     def main(self):
+        weather_info = {}
+        title = ''
 
         command = self.args.command
 
@@ -184,12 +186,16 @@ class App:
 
         if command in self.providers._providers.keys():
             provider.initiate(config.WEATHER_PROVIDERS[command])
-            self.run_app(provider)
+            weather_info, title = provider.run(self.remaining_args)
+            output_data = self.make_printable(weather_info) #create printable
+            self.print_weather(output_data, title) #print weather info on a screen
 
         if not command:
             for title, provider in self.providers._providers.items():
                 provider.initiate(config.WEATHER_PROVIDERS[title])
-                self.run_app(provider)
+                weather_info, title = provider.run(self.remaining_args)
+                output_data = self.make_printable(weather_info) #create printable
+                self.print_weather(output_data, title) #print weather info on a screen
 
         if self.args.clear_cache:
             AnyProvider = self.providermanager._providers['Accuweather']
