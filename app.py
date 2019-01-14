@@ -15,7 +15,6 @@ class App:
         self.providers = ProviderManager()
         self.commands = CommandManager().commands
 
-
     def take_args(self):
         """
         Set, parse and manage CLI arguments
@@ -185,14 +184,12 @@ class App:
             command_factory(self).run()
 
         if command in self.providers._providers.keys():
-            provider.initiate(config.WEATHER_PROVIDERS[command])
-            weather_info, title = provider.run(self.remaining_args)
+            weather_info, title = provider(self).run()
             output_data = self.make_printable(weather_info) #create printable
             self.print_weather(output_data, title) #print weather info on a screen
 
         if not command:
             for title, provider in self.providers._providers.items():
-                #provider(self)
                 weather_info, title = provider(self).run()
                 output_data = self.make_printable(weather_info) #create printable
                 self.print_weather(output_data, title) #print weather info on a screen

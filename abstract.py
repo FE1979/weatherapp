@@ -47,6 +47,10 @@ class WeatherProvider(Command):
         for item in config.WEATHER_PROVIDERS[self.title]:
             self.__setattr__(item, config.WEATHER_PROVIDERS[self.title][item])
 
+        if self.title in ('RP5', 'Sinoptik'):
+            self.URL_hourly = self.URL
+            self.URL_next_day = self.URL
+
     def get_raw_page(self, URL, force_reload = False):
         """
         Loads a page from given URL
@@ -179,13 +183,6 @@ class WeatherProvider(Command):
     @abc.abstractmethod
     def get_next_day(self):
         """ Extracts weather info for next day
-        """
-        pass
-
-    @abc.abstractmethod
-    def get_current_location(self):
-
-        """ Returns current location
         """
         pass
 
