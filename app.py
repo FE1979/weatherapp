@@ -189,11 +189,19 @@ class App:
             output_data = self.make_printable(weather_info) #create printable
             self.print_weather(output_data, title) #print weather info on a screen
 
+            config.ACTUAL_WEATHER_INFO[provider.title] = weather_info
+            config.ACTUAL_PRINTABLE_INFO[title] = self.nice_output(output_data,
+                                                                    title)
+
         if not command:
             for title, provider in self.providers._providers.items():
                 weather_info, title = provider(self).run()
                 output_data = self.make_printable(weather_info) #create printable
                 self.print_weather(output_data, title) #print weather info on a screen
+
+                config.ACTUAL_WEATHER_INFO[provider.title] = weather_info
+                config.ACTUAL_PRINTABLE_INFO[title] = self.nice_output(output_data,
+                                                                    title)
 
         if self.args.clear_cache:
             AnyProvider = self.providermanager._providers['Accuweather']
@@ -203,9 +211,10 @@ class App:
             return None
 
         if self.args.csv:
-            self.save_csv(config.ACTUAL_WEATHER_INFO, args.csv)
+            self.save_csv(config.ACTUAL_WEATHER_INFO, self.args.csv)
+            print(config.ACTUAL_WEATHER_INFO)
         if self.args.save:
-            self.save_txt(config.ACTUAL_PRINTABLE_INFO, args.save)
+            self.save_txt(config.ACTUAL_PRINTABLE_INFO, self.args.save)
 
         config.save_config(config.CONFIG)
 
