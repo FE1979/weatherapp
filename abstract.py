@@ -5,7 +5,7 @@ from urllib.parse import quote, unquote
 from urllib import parse
 from bs4 import BeautifulSoup
 
-
+import os
 import abc
 import pathlib
 import hashlib
@@ -75,7 +75,7 @@ class WeatherProvider(Command):
         """ Gets cache file full path """
 
         filename = hashlib.md5(URL.encode('utf-8')).hexdigest() + '.wbc'
-        path = pathlib.Path(self.Cache_path)
+        path = pathlib.Path(config.WEATHER_PROVIDERS['App']['Cache_path'])
         cache_file_path = path.joinpath(filename)
 
         return cache_file_path
@@ -135,21 +135,6 @@ class WeatherProvider(Command):
             cache_valid = False
 
         return cache_valid
-
-    def clear_cache(self):
-        """ Removes cache directory """
-
-        path = pathlib.Path(self.Cache_path)
-
-        answer = input('Do you really want to remove all cache files with directory? Y/N\n')
-        if answer.lower() == 'y':
-            for item in list(path.glob('*.*')):
-                item.unlink()
-            print('Files removed')
-            path.rmdir()
-            print('Directory removed')
-        else:
-            pass
 
     def get_instance_variables(self):
         """ Returns dictionary {self.variable: value} """

@@ -10,27 +10,28 @@ import decorators
 """ Define global params """
 #WEATHER_PROVIDERS used as default values for first start or settings container
 WEATHER_PROVIDERS = {
+'App': {
+        'Cache_path': str(pathlib.Path.cwd() / 'Cache'),
+        'Providers_on': ['Accuweather', 'RP5', 'Sinoptik']
+        },
 'Accuweather': {'Title': 'Accuweather',
         'URL': "https://www.accuweather.com/uk/ua/kyiv/324505/weather-forecast/324505",
         'URL_hourly': "https://www.accuweather.com/uk/ua/kyiv/324505/hourly-weather-forecast/324505",
         'URL_next_day': "https://www.accuweather.com/uk/ua/kyiv/324505/daily-weather-forecast/324505?day=2",
         'Location': 'Київ',
         'URL_locations': "https://www.accuweather.com/uk/browse-locations",
-        'Cache_path': str(pathlib.Path.cwd() / 'Cache'),
         'Caching_time': 60
         },
 'RP5': {'Title': 'RP5',
         'URL': "http://rp5.ua/" + quote("Погода_в_Києві"),
         'Location': 'Київ',
         'URL_locations': "http://rp5.ua/" + quote("Погода_в_світі"),
-        'Cache_path': str(pathlib.Path.cwd() / 'Cache'),
         'Caching_time': 60
         },
 'Sinoptik': {'Title': 'Sinoptik',
         'URL': "https://ua.sinoptik.ua/" + quote("погода-київ"),
         'Location': 'Київ',
         'URL_locations': "https://ua.sinoptik.ua/" + quote("погода-європа"),
-        'Cache_path': str(pathlib.Path.cwd() / 'Cache'),
         'Caching_time': 60
         }
 }
@@ -97,7 +98,7 @@ def restore_config(config):
     config = write_config(config)
 
     return config
-    
+
 def initiate_config(config):
     """ Initiates config
         Sets weather_providers and other conf variables
@@ -108,8 +109,8 @@ def initiate_config(config):
     if not path.exists(): #create new config file with defaults
         config = restore_config(config)
         save_config(config)
-    else:
-        weather_providers = load_config(config)
+
+    weather_providers = load_config(config)
 
     return config, weather_providers
 

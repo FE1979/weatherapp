@@ -2,6 +2,7 @@
 
 from html import escape, unescape
 import argparse
+import pathlib
 
 from providermanager import ProviderManager
 from commandmanager import CommandManager
@@ -76,10 +77,7 @@ class App:
                                                                     title)
 
         if self.args.clear_cache:
-            AnyProvider = self.providermanager._providers['Accuweather']
-            AnyProvider.Cache_path = config.WEATHER_PROVIDERS['Accuweather']['Cache_path']
-            AnyProvider.clear_cache()
-            del AnyProvider
+            self.clear_cache()
             return None
 
         if self.args.csv:
@@ -210,6 +208,22 @@ class App:
                 f.write(ACTUAL_PRINTABLE_INFO[item])
 
         pass
+
+    @staticmethod
+    def clear_cache():
+        """ Removes cache directory """
+        print(config.WEATHER_PROVIDERS)
+        path = pathlib.Path(config.WEATHER_PROVIDERS['App']['Cache_path'])
+
+        answer = input('Do you really want to remove all cache files with directory? Y/N\n')
+        if answer.lower() == 'y':
+            for item in list(path.glob('*.*')):
+                item.unlink()
+            print('Files removed')
+            path.rmdir()
+            print('Directory removed')
+        else:
+            pass
 
 if __name__ == "__main__":
     Ap = App()
