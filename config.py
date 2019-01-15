@@ -12,8 +12,7 @@ import decorators
 #WEATHER_PROVIDERS used as default values for first start or settings container
 WEATHER_PROVIDERS = {
 'App': {
-        'Cache_path': str(pathlib.Path.cwd() / 'Cache'),
-        'Providers_on': ['Accuweather', 'RP5', 'Sinoptik']
+        'Cache_path': str(pathlib.Path.cwd() / 'Cache')
         },
 'Accuweather': {'Title': 'Accuweather',
         'URL': "https://www.accuweather.com/uk/ua/kyiv/324505/weather-forecast/324505",
@@ -66,14 +65,14 @@ def restore_providers_conf():
     """ restores providers configuration file """
     path_providers = pathlib.Path(PROVIDERS_CONF_PATH)
 
-    with open('path_providers', 'w') as conf_file:
+    with open(path_providers, 'w') as conf_file:
         json.dump(PROVIDERS_CONF, conf_file)
 
 def load_providers_conf():
     """ loads providers configuration """
     path_providers = pathlib.Path(PROVIDERS_CONF_PATH)
 
-    with open('path_providers', 'r') as conf_file:
+    with open(path_providers, 'r') as conf_file:
         providers_configuration = json.load(conf_file)
 
     return providers_configuration
@@ -82,7 +81,7 @@ def write_providers_conf():
     """ writes providers configuration """
     path_providers = pathlib.Path(PROVIDERS_CONF_PATH)
 
-    with open('path_providers', 'w') as conf_file:
+    with open(path_providers, 'w') as conf_file:
         json.dump(PROVIDERS_CONF, conf_file)
 
 def initiate_providers_conf():

@@ -41,8 +41,6 @@ class App:
 
         args, remaining_args = parser.parse_known_args()
 
-        print(args)
-
         return args, remaining_args
 
     #@decorators.show_loading
@@ -51,11 +49,13 @@ class App:
         title = ''
 
         command = self.args.command
-
+        print(config.PROVIDERS_CONF)
         if command in self.commands.keys():
             command_factory = self.commands.get(command, None)
             command_factory(self).run()
-
+        """else:
+            print('No such command')
+        """
         if command in self.providers._providers.keys():
             provider = self.providers._providers.get(command)
             weather_info, title = provider(self).run()
@@ -67,14 +67,16 @@ class App:
                                                                     title)
 
         if not command:
-            for title, provider in self.providers._providers.items():
-                weather_info, title = provider(self).run()
-                output_data = self.make_printable(weather_info) #create printable
-                self.print_weather(output_data, title) #print weather info on a screen
+            for item in config.PROVIDERS_CONF:
+                if config.PROVIDERS_CONF[item]['Show'] == True:
+                    provider = self.providers._providers[item]
+                    weather_info, title = provider(self).run()
+                    output_data = self.make_printable(weather_info) #create printable
+                    self.print_weather(output_data, title) #print weather info on a screen
 
-                config.ACTUAL_WEATHER_INFO[provider.title] = weather_info
-                config.ACTUAL_PRINTABLE_INFO[title] = self.nice_output(output_data,
-                                                                    title)
+                    config.ACTUAL_WEATHER_INFO[provider.title] = weather_info
+                    config.ACTUAL_PRINTABLE_INFO[title] = self.nice_output(output_data,
+                                                                        title)
 
         if self.args.clear_cache:
             self.clear_cache()
@@ -87,6 +89,7 @@ class App:
             self.save_txt(config.ACTUAL_PRINTABLE_INFO, self.args.save)
 
         config.save_config(config.CONFIG)
+        config.write_providers_conf()
 
     """ Output functions """
 
