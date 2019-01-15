@@ -49,13 +49,11 @@ class App:
         title = ''
 
         command = self.args.command
-        print(config.PROVIDERS_CONF)
+
         if command in self.commands.keys():
             command_factory = self.commands.get(command, None)
             command_factory(self).run()
-        """else:
-            print('No such command')
-        """
+
         if command in self.providers._providers.keys():
             provider = self.providers._providers.get(command)
             weather_info, title = provider(self).run()
@@ -77,6 +75,8 @@ class App:
                     config.ACTUAL_WEATHER_INFO[provider.title] = weather_info
                     config.ACTUAL_PRINTABLE_INFO[title] = self.nice_output(output_data,
                                                                         title)
+        else:
+            print('No such command')
 
         if self.args.clear_cache:
             self.clear_cache()
