@@ -15,16 +15,19 @@ class ConfigureApp(Command):
         providers_list = list(enumerate(self.app.providers._providers.keys()))
         for number, item in providers_list:
             print(f"{number} - {item}")
-        print("Enter number of providers separately")
-        choice = input('').split()
-        choice = [int(x) for x in choice]
+        print("Enter number of providers separately or S to skip")
+        try:
+            choice = input('').split()
+            choice = [int(x) for x in choice]
 
-        for number, item in providers_list:
-            if number in choice:
-                config.PROVIDERS_CONF[providers_list[number][1]]['Show'] = True
-            else:
-                config.PROVIDERS_CONF[providers_list[number][1]]['Show'] = False
-
+            for number, item in providers_list:
+                if number in choice:
+                    config.PROVIDERS_CONF[providers_list[number][1]]['Show'] = True
+                else:
+                    config.PROVIDERS_CONF[providers_list[number][1]]['Show'] = False
+        except ValueError:
+            pass
+            
         print('Do you want to set refresh time for all providers?')
         reload_time = input('Type time in minutes or any non-number to skip\n')
 
@@ -35,7 +38,7 @@ class ConfigureApp(Command):
             return
         #set refresh time for all providers
         for item in config.WEATHER_PROVIDERS:
-            for key in config[item]:
+            for key in config.WEATHER_PROVIDERS[item]:
                 if key == 'Caching_time':
                     config.WEATHER_PROVIDERS[item][key] = reload_time
 
