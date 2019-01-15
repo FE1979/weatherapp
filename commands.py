@@ -27,7 +27,7 @@ class ConfigureApp(Command):
                     config.PROVIDERS_CONF[providers_list[number][1]]['Show'] = False
         except ValueError:
             pass
-            
+
         print('Do you want to set refresh time for all providers?')
         reload_time = input('Type time in minutes or any non-number to skip\n')
 
@@ -42,14 +42,20 @@ class ConfigureApp(Command):
                 if key == 'Caching_time':
                     config.WEATHER_PROVIDERS[item][key] = reload_time
 
-
 class Configure(Command):
     """ Configures Provider """
 
     name = 'Configure'
 
-    def __init__(self, providers):
-        self.providers = providers
-
     def run(self):
-        print("I cofigure Provider")
+        for item in self.app.providers._providers:
+            for key in config.PROVIDERS_CONF[item]:
+                if key == 'Next_day':
+                    choice = input(f"{item}, show next day forecast? Y/N\n")
+                    if choice.lower() == 'y':
+                        config.PROVIDERS_CONF[item]['Next_day'] = True
+                elif key == 'Next_hours':
+                    choice = input(f"{item}, show next hours forecast? Y/N\n")
+                    if choice.lower() == 'y':
+                        config.PROVIDERS_CONF[item]['Next_hours'] = True
+        print('Bye-bye!')
