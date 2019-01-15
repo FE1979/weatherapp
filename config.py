@@ -4,6 +4,7 @@
 from urllib.parse import quote, unquote
 import pathlib
 import configparser
+import json
 
 import decorators
 
@@ -35,6 +36,17 @@ WEATHER_PROVIDERS = {
         'Caching_time': 60
         }
 }
+PROVIDERS_CONF = {
+                'Accuweather': {'Show': True,
+                                'Next_day': False,
+                                'Next_hours': True},
+                'RP5': {'Show': True,
+                        'Next_day': False,
+                        'Next_hours': True},
+                'Sinoptik': {'Show': True,
+                        'Next_day': False,
+                        'Next_hours': True}
+}
 
 ACTUAL_WEATHER_INFO = {}
 ACTUAL_PRINTABLE_INFO = {}
@@ -44,10 +56,48 @@ CACHING_TIME = 60
 CONFIG = configparser.ConfigParser()
 CONFIG.optionxform = str
 CONFIG_PATH = 'weather_config.ini'
+PROVIDERS_CONF_PATH = 'providers_conf.json'
 
 """ End of global params """
 
 """ Config settings and fuctions """
+
+def restore_providers_conf():
+    """ restores providers configuration file """
+    path_providers = pathlib.Path(PROVIDERS_CONF_PATH)
+
+    with open('path_providers', 'w') as conf_file:
+        json.dump(PROVIDERS_CONF, conf_file)
+
+def load_providers_conf():
+    """ loads providers configuration """
+    path_providers = pathlib.Path(PROVIDERS_CONF_PATH)
+
+    with open('path_providers', 'r') as conf_file:
+        providers_configuration = json.load(conf_file)
+
+    return providers_configuration
+
+def write_providers_conf():
+    """ writes providers configuration """
+    path_providers = pathlib.Path(PROVIDERS_CONF_PATH)
+
+    with open('path_providers', 'w') as conf_file:
+        json.dump(PROVIDERS_CONF, conf_file)
+
+def initiate_providers_conf():
+    """ checks if configuration file existed
+        if no file creates one with default conf
+        Loads configuration from a file at the end
+    """
+    path_providers = pathlib.Path(PROVIDERS_CONF_PATH)
+
+    if not path_providers.exists():
+        restore_providers_conf()
+
+    providers_configuration = load_providers_conf()
+
+    return providers_configuration
 
 def write_config(config):
     """ writes WEATHER_PROVIDERS attributes to config """
@@ -134,6 +184,7 @@ def set_config(title, variables, weather_providers):
     return weather_providers
 
 CONFIG, WEATHER_PROVIDERS = initiate_config(CONFIG)
+PROVIDERS_CONF = initiate_providers_conf()
 
 if __name__ == "__main__":
     pass
