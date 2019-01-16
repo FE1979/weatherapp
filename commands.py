@@ -48,14 +48,22 @@ class Configure(Command):
     name = 'Configure'
 
     def run(self):
+        print(self.app.remaining_args)
+        self.set_options()
+        print('Bye-bye!')
+
+    def set_options(self):
         for item in self.app.providers._providers:
             for key in config.PROVIDERS_CONF[item]:
                 if key == 'Next_day':
                     choice = input(f"{item}, show next day forecast? Y/N\n")
                     if choice.lower() == 'y':
                         config.PROVIDERS_CONF[item]['Next_day'] = True
+                    elif choice.lower() == 'n':
+                        config.PROVIDERS_CONF[item]['Next_day'] = False
                 elif key == 'Next_hours':
                     choice = input(f"{item}, show next hours forecast? Y/N\n")
                     if choice.lower() == 'y':
                         config.PROVIDERS_CONF[item]['Next_hours'] = True
-        print('Bye-bye!')
+                    if choice.lower() == 'n':
+                        config.PROVIDERS_CONF[item]['Next_hours'] = False
