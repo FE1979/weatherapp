@@ -48,18 +48,29 @@ class Configure(Command):
     name = 'Configure'
 
     def run(self):
+        """ Runs provider configuration proccess"""
+
         print(self.app.remaining_args)
+
+        provider_title = ''
+        set_loc = False
+
+        choice = input('Do you want set up location? Y/N')
+
+        if choice.lower() == 'y':
+            set_loc = True
 
         if len(self.app.remaining_args) > 0: #if there is argument
             provider_title = self.app.remaining_args[0]
 
         if provider_title in self.app.providers._providers: #if first argument is provider title
             self.set_options(provider_title)
-            self.set_location(provider_title)
+            set_loc and self.set_location(provider_title)
         else: #if no provider chosen do it for all
             for provider_title in self.app.providers._providers:
                 self.set_options(provider_title)
-                self.set_location(provider_title)
+                set_loc and self.set_location(provider_title)
+
         print('Bye-bye!')
 
     def set_options(self, provider_title):
