@@ -214,6 +214,6 @@ class WeatherProvider(Command):
             title = title + ", поточна погода, " + city
             if self.args.forec:
                 self.raw_page = self.get_raw_page(self.URL_hourly, refresh)
-                info_hourly = self.get_hourly()
+                weather_info.update(self.get_hourly())
 
         return weather_info, title

@@ -47,7 +47,8 @@ class App:
     def main(self):
         weather_info = {}
         title = ''
-
+        print(self.args)
+        print(self.remaining_args)
         command = self.args.command
 
         if command in self.commands.keys():
