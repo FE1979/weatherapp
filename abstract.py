@@ -201,13 +201,13 @@ class WeatherProvider(Command):
         """ Parse remaining arguments """
 
         parser = argparse.ArgumentParser()
-        parser.add_argument("-next", help="Next day forecast (ACCU only)",
+        parser.add_argument("-next", help="Next day forecast",
                     action="store_true") #Provider option
         group = parser.add_mutually_exclusive_group()
         group.add_argument("-f", "--forec", help="Display forecast for next hours",
-                            action="store_true", default=True) #Provider option
+                            action="store_true") #Provider option
         group.add_argument("-nf", "--noforec", help="Do not display forecast for next hours",
-                            action='store_true') #Provider option
+                            action='store_false') #Provider option
         parser.add_argument("-refresh", help="Force reloading pages",
                             action="store_true") #Provider option
         self.args = parser.parse_args(self.app.remaining_args)
