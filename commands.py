@@ -50,15 +50,16 @@ class Configure(Command):
     def run(self):
         print(self.app.remaining_args)
 
-        if self.app.remaining_args[0]:
+        if len(self.app.remaining_args) > 0: #if there is argument
             provider_title = self.app.remaining_args[0]
+
         if provider_title in self.app.providers._providers: #if first argument is provider title
             self.set_options(provider_title)
-            #self.set_location(provider_title)
+            self.set_location(provider_title)
         else: #if no provider chosen do it for all
             for provider_title in self.app.providers._providers:
                 self.set_options(provider_title)
-            #    self.set_location(provider_title)
+                self.set_location(provider_title)
         print('Bye-bye!')
 
     def set_options(self, provider_title):
@@ -77,3 +78,9 @@ class Configure(Command):
                     config.PROVIDERS_CONF[provider_title]['Next_hours'] = True
                 if choice.lower() == 'n':
                     config.PROVIDERS_CONF[provider_title]['Next_hours'] = False
+
+    def set_location(self, provider_title):
+        """ sets location of provider """
+
+        provider = self.app.providers._providers.get(provider_title)
+        provider(self.app).config_location()

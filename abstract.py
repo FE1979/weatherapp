@@ -142,7 +142,7 @@ class WeatherProvider(Command):
         inst_variables = {}
 
         for item in self.__dict__:
-            if item == 'raw_page':
+            if item in ['raw_page', 'app']: #exceptions
                 pass
             else:
                 inst_variables[item] = self.__getattribute__(item)
@@ -179,6 +179,23 @@ class WeatherProvider(Command):
     @abc.abstractmethod
     def set_location(self, location_set):
         """ Sets to the config location """
+
+    def config_location(self):
+        """ Configurate location """
+
+        #show current location
+
+        print("Current location\n")
+        print(self.Location)
+        print('\n')
+        #choose new location
+        location_set = self.browse_location()
+        self.set_location(location_set)
+
+        # save location to the config
+        config.WEATHER_PROVIDERS = config.set_config(self.Title,
+                                    self.get_instance_variables(),
+                                    config.WEATHER_PROVIDERS)
 
     def get_cli_args(self):
         """ Parse remaining arguments """

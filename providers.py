@@ -483,7 +483,7 @@ class SinoptikProvider(WeatherProvider):
             raw_list = soup.find('div', class_="mapBotCol") #find list of locations
             raw_list = raw_list.find('div', class_="clearfix")
             raw_list = raw_list.find_all('a') #take all links in list of locations
-            print(raw_list)
+            
             for item in raw_list: #associate location with ulr
                 url_decoded = quote(item.attrs['href'])
                 locations_list[item.get_text()] = "https:" + url_decoded
