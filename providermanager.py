@@ -1,6 +1,9 @@
-from providers import AccuProvider, RP5_Provider, SinoptikProvider
+""" Provider Manager """
 
-class ProviderManager:
+from providers import AccuProvider, RP5_Provider, SinoptikProvider
+import abstract
+
+class ProviderManager(abstract.Manager):
     """ Imports providers from providers.py
     """
 

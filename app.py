@@ -74,7 +74,7 @@ Provider - show specified provider.""",
         command = self.args.command
 
         if command in self.commands.keys():
-            command_factory = self.commands.get(command, None)
+            command_factory = self.commands.get(command)
             command_factory(self).run()
 
         if command in self.providers.get_list():

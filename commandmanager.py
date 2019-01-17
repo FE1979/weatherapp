@@ -1,8 +1,9 @@
 """ Application command manager """
 
 from commands import ConfigureApp, Configure
+import abstract
 
-class CommandManager:
+class CommandManager(abstract.Manager):
     """ Container for commands """
 
     def __init__(self):
@@ -14,3 +15,13 @@ class CommandManager:
 
         for item in [ConfigureApp, Configure]:
             self.commands[item.name] = item
+
+    def add(self, name, command):
+        """ Add command """
+        self.commands[name] = command
+
+    def get(self, name):
+        """ Get provider by name
+        """
+
+        return self.commands.get(name, None)

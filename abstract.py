@@ -15,6 +15,17 @@ import configparser
 
 import config
 
+class Manager(abc.ABC):
+    """ Abstract class for managers """
+
+    @abc.abstractmethod
+    def add(self, name, command):
+        """ Adds command or provider to container """
+
+    @abc.abstractmethod
+    def get(self, name):
+        """ Gets command or provider """
+
 class Command(abc.ABC):
     """ Base class for commands """
 
