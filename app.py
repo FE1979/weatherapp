@@ -77,10 +77,10 @@ Provider - show specified provider.""",
             command_factory = self.commands.get(command, None)
             command_factory(self).run()
 
-        if command in self.providers._providers.keys():
+        if command in self.providers.get_list():
             if get_options: #get options if no CLI provider args
                 self.remaining_args = self.get_option_args(command)
-            provider = self.providers._providers.get(command)
+            provider = self.providers.get(command)
             weather_info, title = provider(self).run()
             output_data = self.make_printable(weather_info) #create printable
             self.print_weather(output_data, title) #print weather info on a screen
@@ -95,7 +95,7 @@ Provider - show specified provider.""",
                     self.remaining_args = self.get_option_args(item)
 
                 if config.PROVIDERS_CONF[item]['Show'] == True:
-                    provider = self.providers._providers[item]
+                    provider = self.providers.get(item)
                     weather_info, title = provider(self).run()
                     output_data = self.make_printable(weather_info) #create printable
                     self.print_weather(output_data, title) #print weather info on a screen

@@ -12,7 +12,7 @@ class ConfigureApp(Command):
     def run(self):
         """ Run configuration proccess """
         print('Set providers to show:')
-        providers_list = list(enumerate(self.app.providers._providers.keys()))
+        providers_list = list(enumerate(self.app.providers.get_list()))
         for number, item in providers_list:
             print(f"{number} - {item}")
         print("Enter number of providers separately or S to skip")
@@ -63,11 +63,11 @@ class Configure(Command):
         if len(self.app.remaining_args) > 0: #if there is argument
             provider_title = self.app.remaining_args[0]
 
-        if provider_title in self.app.providers._providers: #if first argument is provider title
+        if provider_title in self.app.providers.get_list(): #if first argument is provider title
             self.set_options(provider_title)
             set_loc and self.set_location(provider_title)
         else: #if no provider chosen do it for all
-            for provider_title in self.app.providers._providers:
+            for provider_title in self.app.providers.get_list():
                 self.set_options(provider_title)
                 set_loc and self.set_location(provider_title)
 

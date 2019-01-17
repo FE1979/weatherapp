@@ -18,7 +18,6 @@ class ProviderManager:
     def add(self, name, provider):
         """ Add provider
         """
-
         self._providers[name] = provider
 
     def get(self, name):
@@ -26,3 +25,7 @@ class ProviderManager:
         """
 
         return self._providers.get(name, None)
+
+    def get_list(self):
+        """ gets list of providers """
+        return self._providers.keys()
