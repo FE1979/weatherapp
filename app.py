@@ -43,12 +43,28 @@ class App:
 
         return args, remaining_args
 
+    def get_option_args(self, provider_title):
+        """ Loads show options from providers config
+            if no options defined by user
+        """
+        args = []
+        options = config.PROVIDERS_CONF[provider_title] #get options for provider
+        for item in options:
+            if item == 'Next_day' and options[item]: #if Next_day == True
+                args.append('-next') #set CLI argument
+            elif item == 'Next_hours' and options[item]:
+                args.append('-f')
+
+        return args
+
     #@decorators.show_loading
     def main(self):
         weather_info = {}
         title = ''
-        print(self.args)
-        print(self.remaining_args)
+        get_options = False
+        if len(self.remaining_args) == 0: #get options if no CLI provider args
+            get_options = True
+
         command = self.args.command
 
         if command in self.commands.keys():
@@ -56,6 +72,8 @@ class App:
             command_factory(self).run()
 
         if command in self.providers._providers.keys():
+            if get_options: #get options if no CLI provider args
+                self.remaining_args = self.get_option_args(command)
             provider = self.providers._providers.get(command)
             weather_info, title = provider(self).run()
             output_data = self.make_printable(weather_info) #create printable
@@ -67,6 +85,9 @@ class App:
 
         if not command:
             for item in config.PROVIDERS_CONF:
+                if get_options: #get options if no CLI provider args
+                    self.remaining_args = self.get_option_args(item)
+
                 if config.PROVIDERS_CONF[item]['Show'] == True:
                     provider = self.providers._providers[item]
                     weather_info, title = provider(self).run()
