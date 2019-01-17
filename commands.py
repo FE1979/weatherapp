@@ -64,11 +64,11 @@ class Configure(Command):
             provider_title = self.app.remaining_args[0]
 
         if provider_title in self.app.providers.get_list(): #if first argument is provider title
-            self.set_options(provider_title)
+            not set_loc and self.set_options(provider_title)
             set_loc and self.set_location(provider_title)
         else: #if no provider chosen do it for all
             for provider_title in self.app.providers.get_list():
-                self.set_options(provider_title)
+                not set_loc and self.set_options(provider_title)
                 set_loc and self.set_location(provider_title)
 
         print('Bye-bye!')
@@ -93,5 +93,5 @@ class Configure(Command):
     def set_location(self, provider_title):
         """ sets location of provider """
 
-        provider = self.app.providers._providers.get(provider_title)
+        provider = self.app.providers.get(provider_title)
         provider(self.app).config_location()
