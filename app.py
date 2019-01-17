@@ -22,13 +22,19 @@ class App:
         """
 
         parser = argparse.ArgumentParser(prog="Weatherapp", epilog="Get fun!",
-            description="""A program shows you current weather condition in Kyiv
-            and, optionaly, temperature forecast""",
-            usage="""weatherapp -provider -forecast -csv/-save [file_name]""")
+            formatter_class = argparse.RawTextHelpFormatter,
+            description="""A program shows you current weather condition and, optionaly, temperature forecast.\n
+            Provider options:
+            -f, --forec: displays forecast for next hours
+            -nf, --noforec: do not display forecast for next hours
+            -refresh: force reloading pages""",
+            usage="""app command / provider -forecast -csv/-save [file_name]""")
 
         parser.add_argument("command",
-                            help="All - runs specified provider. If not specified runs all switched on",
-                            nargs="?")
+            help="""ConfigureApp - aplication configuration.
+Configure - provider configuration.
+Provider - show specified provider.""",
+            nargs="?")
 
         parser.add_argument("-csv", metavar="[filename]",
                             help="Export weather info to CSV formatted file",
