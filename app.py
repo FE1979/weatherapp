@@ -9,6 +9,7 @@ from commandmanager import CommandManager
 import sys
 import traceback
 import config
+import logging
 import decorators
 
 class App:
@@ -17,6 +18,23 @@ class App:
         self.args, self.remaining_args = self.take_args()
         self.providers = ProviderManager()
         self.commands = CommandManager().commands
+        self.logger = get_logger()
+
+    @staticmethod
+    def _get_logger():
+        """ Gets looger forr application """
+
+        logger = logging.getLogger('app')
+        logger.setLevel(logging.DEBUG)
+
+        console = logging.StreamHandler()
+        console.setLevel(logging.DEBUG)
+
+        fmt = logging.Formatter('%(asctime)s %(name)s %(levelname)s %(message)s')
+        console.setFormatter(fmt)
+        logger.addHandler(console)
+
+        return logger
 
     def take_args(self):
         """
