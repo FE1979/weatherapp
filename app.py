@@ -18,7 +18,7 @@ class App:
         self.args, self.remaining_args = self.take_args()
         self.providers = ProviderManager()
         self.commands = CommandManager().commands
-        self.logger = get_logger()
+        self.logger = self._get_logger()
 
     @staticmethod
     def _get_logger():
@@ -66,6 +66,8 @@ Provider - show specified provider.""",
                             action="store_true") #App command
         parser.add_argument("--debug", help="Show error tracebacks",
                             action="store_true")
+        parser.add_argument("-v", "--VERBOSITY", help="Debug level, -v - INFO, -vv - DEBUG, -vvv - WARNING",
+                            action="count")
 
         args, remaining_args = parser.parse_known_args()
 
