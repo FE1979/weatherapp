@@ -26,6 +26,9 @@ class ConfigureApp(Command):
             for number, item in providers_list:
                 if number in choice:
                     config.PROVIDERS_CONF[providers_list[number][1]]['Show'] = True
+                #in case if number is wrong
+                elif number < max(choice):
+                    continue
                 else:
                     config.PROVIDERS_CONF[providers_list[number][1]]['Show'] = False
         except ValueError:
