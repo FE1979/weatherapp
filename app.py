@@ -18,17 +18,24 @@ class App:
         self.args, self.remaining_args = self.take_args()
         self.providers = ProviderManager()
         self.commands = CommandManager().commands
-        self.logger = self._get_logger()
+        self.logger = self._get_logger(self.args.verbosity)
 
     @staticmethod
-    def _get_logger():
+    def _get_logger(verbose_lvl):
         """ Gets looger forr application """
 
         logger = logging.getLogger('app')
-        logger.setLevel(logging.DEBUG)
-
         console = logging.StreamHandler()
-        console.setLevel(logging.DEBUG)
+
+        if verbose_lvl == 1:
+            logger.setLevel(logging.INFO)
+            console.setLevel(logging.INFO)
+        elif verbose_lvl == 2:
+            logger.setLevel(logging.DEBUG)
+            console.setLevel(logging.DEBUG)
+        else:
+            logger.setLevel(logging.WARNING)
+            console.setLevel(logging.WARNING)
 
         fmt = logging.Formatter('%(asctime)s %(name)s %(levelname)s %(message)s')
         console.setFormatter(fmt)
@@ -66,7 +73,7 @@ Provider - show specified provider.""",
                             action="store_true") #App command
         parser.add_argument("--debug", help="Show error tracebacks",
                             action="store_true")
-        parser.add_argument("-v", "--VERBOSITY", help="Debug level, -v - INFO, -vv - DEBUG, -vvv - WARNING",
+        parser.add_argument("-v", "--verbosity", help="Debug level, -v - INFO, -vv - DEBUG, -vvv - WARNING",
                             action="count")
 
         args, remaining_args = parser.parse_known_args()
