@@ -69,6 +69,11 @@ Provider - show specified provider.""",
         title = ''
         get_options = False
 
+        #clear cache first and exit. If no such option - continue
+        if self.args.clear_cache:
+            self.clear_cache()
+            return None
+
         # check if config file is valid, exit if not
         if not config.is_valid():
             print('Config files are broken. Delete them to reconfigure to defaults')
@@ -112,9 +117,7 @@ Provider - show specified provider.""",
         else:
             print('No such command')
 
-        if self.args.clear_cache:
-            self.clear_cache()
-            return None
+
 
         if self.args.csv:
             self.save_csv(config.ACTUAL_WEATHER_INFO, self.args.csv)
@@ -249,7 +252,7 @@ Provider - show specified provider.""",
     @staticmethod
     def clear_cache():
         """ Removes cache directory """
-        
+
         path = pathlib.Path(config.WEATHER_PROVIDERS['App']['Cache_path'])
 
         answer = input('Do you really want to remove all cache files with directory? Y/N\n')

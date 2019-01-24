@@ -72,7 +72,7 @@ class WeatherProvider(Command):
             HEAD = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:63.0) Gecko/201'}
             INFO_REQUEST = Request(URL, headers = HEAD)
             PAGE = urlopen(INFO_REQUEST).read()
-
+        
             self.save_cache(PAGE, URL)
 
         else:
