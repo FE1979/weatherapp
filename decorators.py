@@ -18,7 +18,10 @@ def pause_moment(func, *args, **kwargs):
 def pause(func, *args, **kwargs):
     """ Pause for user defined time in seconds """
     def wrapper(*args, **kwargs):
-        pause_time = int(input("Enter time in second to pause\n"))
+        try:
+            pause_time = int(input("Enter time in second to pause\n"))
+        except ValueError:
+            pause_time = 0
         for i in range(pause_time):
             print(i, end=" ", flush=True)
             time.sleep(1)

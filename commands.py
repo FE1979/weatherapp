@@ -18,7 +18,10 @@ class ConfigureApp(Command):
         print("Enter number of providers separately or S to skip")
         try:
             choice = input('').split()
-            choice = [int(x) for x in choice]
+            try:
+                choice = [int(x) for x in choice]
+            except ValueError:
+                print('Only numbers should be entered. Please, restart app and try again.')
 
             for number, item in providers_list:
                 if number in choice:
@@ -50,8 +53,6 @@ class Configure(Command):
     def run(self):
         """ Runs provider configuration proccess"""
 
-        print(self.app.remaining_args)
-
         provider_title = ''
         set_loc = False
 
@@ -60,7 +61,7 @@ class Configure(Command):
         if choice.lower() == 'y':
             set_loc = True
 
-        if len(self.app.remaining_args) > 0: #if there is argument
+        if len(self.app.remaining_args) > 0: #if provider is entered by user
             provider_title = self.app.remaining_args[0]
 
         if provider_title in self.app.providers.get_list(): #if first argument is provider title

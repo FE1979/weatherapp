@@ -4,6 +4,7 @@ from urllib.request import urlopen, Request
 from urllib.parse import quote, unquote
 from urllib import parse
 from bs4 import BeautifulSoup
+import sys
 import re
 import os
 import time
@@ -142,8 +143,11 @@ class AccuProvider(WeatherProvider):
 
         #call this function again with new locations
         if level <3:
-
-            location_set = self.browse_location(level+1, URL_location = locations_list[choice])
+            try:
+                location_set = self.browse_location(level+1, URL_location = locations_list[choice])
+            except KeyError:
+                print('Wrong name entered. Please, restart application and try again')
+                sys.exit()
 
         if level == 3:
             location_set['URL'] = locations_list[choice]
@@ -334,7 +338,11 @@ class RP5_Provider(WeatherProvider):
         choice = input(f"\nEnter {levels[level]} name:\n") #user input
 
         if level <2: #if not city level
-            location_set = self.browse_location(level+1, locations_list[choice])
+            try:
+                location_set = self.browse_location(level+1, locations_list[choice])
+            except KeyError:
+                print('Wrong name entered. Please, restart application and try again')
+                sys.exit()
 
         if level == 2: #final if city level
             location_set['URL'] = locations_list[choice]
@@ -483,7 +491,7 @@ class SinoptikProvider(WeatherProvider):
             raw_list = soup.find('div', class_="mapBotCol") #find list of locations
             raw_list = raw_list.find('div', class_="clearfix")
             raw_list = raw_list.find_all('a') #take all links in list of locations
-            
+
             for item in raw_list: #associate location with ulr
                 url_decoded = quote(item.attrs['href'])
                 locations_list[item.get_text()] = "https:" + url_decoded
@@ -495,8 +503,11 @@ class SinoptikProvider(WeatherProvider):
 
         if level != 3:
             #call this function again with new locations
-
-            location_set = self.browse_location(level+1, locations_list[choice])
+            try:
+                location_set = self.browse_location(level+1, locations_list[choice])
+            except KeyError:
+                print('Wrong name entered. Please, restart application and try again')
+                sys.exit()
 
         if level == 3:
             location_set['URL'] = locations_list[choice]
