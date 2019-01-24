@@ -68,6 +68,12 @@ Provider - show specified provider.""",
         weather_info = {}
         title = ''
         get_options = False
+
+        # check if config file is valid, exit if not
+        if not config.is_valid():
+            print('Config files are broken. Delete them to reconfigure to defaults')
+            return
+
         if len(self.remaining_args) == 0: #get options if no CLI provider args
             get_options = True
 

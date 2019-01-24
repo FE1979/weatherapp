@@ -124,15 +124,19 @@ def load_config(config):
     config.read(CONFIG_PATH)
 
     #load configuration to the weather_providers dict
-    for item in config:
-        weather_providers[item] = {}
-        for key in config[item]:
-            if key == 'Caching_time':
-                weather_providers[item]['Caching_time'] = int(config[item][key])
-            elif key == 'Location': #if cyrillic titles than do not urllib.quote
-                weather_providers[item][key] = config[item][key]
-            else: #if URL
-                weather_providers[item][key] = quote(config[item][key], safe="""://?=\ """)
+    #if no entry - pass. Check config file with is_valid()
+    try:
+        for item in config:
+            weather_providers[item] = {}
+            for key in config[item]:
+                if key == 'Caching_time':
+                    weather_providers[item]['Caching_time'] = int(config[item][key])
+                elif key == 'Location': #if cyrillic titles than do not urllib.quote
+                    weather_providers[item][key] = config[item][key]
+                else: #if URL
+                    weather_providers[item][key] = quote(config[item][key], safe="""://?=\ """)
+    except ValueError:
+        pass
 
     return weather_providers
 
@@ -181,6 +185,33 @@ def set_config(title, variables, weather_providers):
             weather_providers['Sinoptik'][item] = variables[item]
 
     return weather_providers
+
+def is_valid():
+    """ Checks config file for existing values in config file
+        Returns False if config file is broken
+        Should be run after initiate_config() (loaded file)
+    """
+    valid_config = True
+
+    #check if values in config exists
+    for item in WEATHER_PROVIDERS:
+        if item !='':
+            for key in WEATHER_PROVIDERS[item]:
+                if WEATHER_PROVIDERS[item][key] == "" or \
+                    WEATHER_PROVIDERS[item][key] == None:
+                    valid_config = False
+        else:
+            valid_config = False
+
+    for item in PROVIDERS_CONF:
+        if item !='':
+            for key in PROVIDERS_CONF[item]:
+                if PROVIDERS_CONF[item][key] == "" or \
+                    PROVIDERS_CONF[item][key] == None:
+                    valid_config = False
+        else:
+            valid_config = False
+    return valid_config
 
 CONFIG, WEATHER_PROVIDERS = initiate_config(CONFIG)
 PROVIDERS_CONF = initiate_providers_conf()
