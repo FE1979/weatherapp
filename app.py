@@ -249,7 +249,7 @@ Provider - show specified provider.""",
     @staticmethod
     def clear_cache():
         """ Removes cache directory """
-        print(config.WEATHER_PROVIDERS)
+        
         path = pathlib.Path(config.WEATHER_PROVIDERS['App']['Cache_path'])
 
         answer = input('Do you really want to remove all cache files with directory? Y/N\n')
