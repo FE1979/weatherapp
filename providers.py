@@ -146,7 +146,7 @@ class AccuProvider(WeatherProvider):
             try:
                 location_set = self.browse_location(level+1, URL_location = locations_list[choice])
             except KeyError:
-                print('Wrong name entered. Please, restart application and try again')
+                self.logger.error('Wrong name entered. Please, restart application and try again')
                 sys.exit()
 
         if level == 3:
@@ -341,7 +341,7 @@ class RP5_Provider(WeatherProvider):
             try:
                 location_set = self.browse_location(level+1, locations_list[choice])
             except KeyError:
-                print('Wrong name entered. Please, restart application and try again')
+                self.logger.error('Wrong name entered. Please, restart application and try again')
                 sys.exit()
 
         if level == 2: #final if city level
@@ -506,7 +506,7 @@ class SinoptikProvider(WeatherProvider):
             try:
                 location_set = self.browse_location(level+1, locations_list[choice])
             except KeyError:
-                print('Wrong name entered. Please, restart application and try again')
+                self.logger.error('Wrong name entered. Please, restart application and try again')
                 sys.exit()
 
         if level == 3:

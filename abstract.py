@@ -12,6 +12,7 @@ import hashlib
 import time
 import argparse
 import configparser
+import logging
 
 import config
 
@@ -61,6 +62,31 @@ class WeatherProvider(Command):
         if self.title in ('RP5', 'Sinoptik'):
             self.URL_hourly = self.URL
             self.URL_next_day = self.URL
+
+        self.logger = self._get_logger(self.title, self.app.args.verbosity)
+
+    @staticmethod
+    def _get_logger(title, verbose_lvl):
+        """ Gets looger forr application """
+
+        logger = logging.getLogger(title)
+        console = logging.StreamHandler()
+
+        if verbose_lvl == 1:
+            logger.setLevel(logging.INFO)
+            console.setLevel(logging.INFO)
+        elif verbose_lvl == 2:
+            logger.setLevel(logging.DEBUG)
+            console.setLevel(logging.DEBUG)
+        else:
+            logger.setLevel(logging.WARNING)
+            console.setLevel(logging.WARNING)
+
+        fmt = logging.Formatter('%(asctime)s %(name)s %(levelname)s %(message)s')
+        console.setFormatter(fmt)
+        logger.addHandler(console)
+
+        return logger
 
     def get_raw_page(self, URL, force_reload = False):
         """

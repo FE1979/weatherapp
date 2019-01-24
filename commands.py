@@ -18,10 +18,15 @@ class ConfigureApp(Command):
         print("Enter number of providers separately or S to skip")
         try:
             choice = input('').split()
+            #skip
+
+            if 's' or 'S' in choice:
+                raise ValueError
+
             try:
                 choice = [int(x) for x in choice]
             except ValueError:
-                print('Only numbers should be entered. Please, restart app and try again.')
+                self.app.logger.error('Only numbers should be entered. Please, restart app and try again.')
 
             for number, item in providers_list:
                 if number in choice:
@@ -41,6 +46,7 @@ class ConfigureApp(Command):
         try:
             reload_time = int(reload_time)
         except ValueError:
+            self.app.logger.info("Skip")
             return
         #set refresh time for all providers
         for item in config.WEATHER_PROVIDERS:

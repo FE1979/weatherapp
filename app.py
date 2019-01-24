@@ -300,7 +300,7 @@ if __name__ == "__main__":
         Ap.main()
     except Exception:
         if Ap.args.debug:
-            traceback.print_exc()
+            Ap.logger.exception('Unexpected error')
         else:
-            print('Unexpected error', sys.exc_info()[0])
+            Ap.logger.error(f'Unexpected error, {sys.exc_info()[0]}')
         sys.exit()
