@@ -6,6 +6,7 @@ import pathlib
 
 from providermanager import ProviderManager
 from commandmanager import CommandManager
+import sys
 import config
 import decorators
 
@@ -116,8 +117,6 @@ Provider - show specified provider.""",
                                                                         title)
         else:
             print('No such command')
-
-
 
         if self.args.csv:
             self.save_csv(config.ACTUAL_WEATHER_INFO, self.args.csv)
@@ -267,4 +266,8 @@ Provider - show specified provider.""",
 
 if __name__ == "__main__":
     Ap = App()
-    Ap.main()
+    try:
+        Ap.main()
+    except Exception:
+        print('Unexpected error', sys.exc_info()[0])
+        sys.exit()
