@@ -7,6 +7,7 @@ import pathlib
 from providermanager import ProviderManager
 from commandmanager import CommandManager
 import sys
+import traceback
 import config
 import decorators
 
@@ -45,6 +46,8 @@ Provider - show specified provider.""",
                             type=str) #App command
         parser.add_argument("--clear-cache", help="Remove cache files and directory",
                             action="store_true") #App command
+        parser.add_argument("--debug", help="Show error tracebacks",
+                            action="store_true")
 
         args, remaining_args = parser.parse_known_args()
 
@@ -269,5 +272,8 @@ if __name__ == "__main__":
     try:
         Ap.main()
     except Exception:
-        print('Unexpected error', sys.exc_info()[0])
+        if Ap.args.debug:
+            traceback.print_exc()
+        else:
+            print('Unexpected error', sys.exc_info()[0])
         sys.exit()
