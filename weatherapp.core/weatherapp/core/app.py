@@ -3,7 +3,6 @@
 from html import escape, unescape
 import argparse
 import pathlib
-
 import sys
 import traceback
 import logging
