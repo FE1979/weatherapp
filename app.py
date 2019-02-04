@@ -4,13 +4,14 @@ from html import escape, unescape
 import argparse
 import pathlib
 
-from providermanager import ProviderManager
-from commandmanager import CommandManager
 import sys
 import traceback
 import config
 import logging
 import decorators
+
+from managers.providermanager import ProviderManager
+from managers.commandmanager import CommandManager
 
 class App:
 
