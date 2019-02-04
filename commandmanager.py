@@ -1,9 +1,9 @@
 """ Application command manager """
 
-from commands import ConfigureApp, Configure
-import abstract
+from abstract.commands import ConfigureApp, Configure
+import abstract.abstract
 
-class CommandManager(abstract.Manager):
+class CommandManager(abstract.abstract.Manager):
     """ Container for commands """
 
     def __init__(self):

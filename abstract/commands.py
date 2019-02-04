@@ -1,6 +1,6 @@
 """ Application commands """
 
-from abstract import Command
+from abstract.abstract import Command
 
 import config
 

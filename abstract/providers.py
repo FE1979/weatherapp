@@ -11,7 +11,7 @@ import time
 import pathlib
 import hashlib
 
-from abstract import WeatherProvider
+from abstract.abstract import WeatherProvider
 import decorators
 
 class AccuProvider(WeatherProvider):
