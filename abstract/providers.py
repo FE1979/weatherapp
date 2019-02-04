@@ -12,7 +12,7 @@ import pathlib
 import hashlib
 
 from abstract.abstract import WeatherProvider
-import decorators
+import config.decorators
 
 class AccuProvider(WeatherProvider):
     """ Special class for Accuweather"""

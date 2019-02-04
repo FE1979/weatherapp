@@ -6,10 +6,10 @@ import pathlib
 
 import sys
 import traceback
-import config
 import logging
-import decorators
 
+import config.decorators
+from config import config
 from managers.providermanager import ProviderManager
 from managers.commandmanager import CommandManager
 

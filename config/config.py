@@ -6,7 +6,7 @@ import pathlib
 import configparser
 import json
 
-import decorators
+import config.decorators
 
 """ Define global params """
 #WEATHER_PROVIDERS used as default values for first start or settings container

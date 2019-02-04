@@ -14,7 +14,7 @@ import argparse
 import configparser
 import logging
 
-import config
+from config import config
 
 class Manager(abc.ABC):
     """ Abstract class for managers """
