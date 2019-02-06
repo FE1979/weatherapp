@@ -222,9 +222,9 @@ class WeatherProvider(Command):
 
         #show current location
 
-        print("Current location\n")
-        print(self.Location)
-        print('\n')
+        self.app.stdout.write("Current location\n")
+        self.app.stdout.write(f"{self.Location}\n")
+        self.app.stdout.write('\n')
         #choose new location
         location_set = self.browse_location()
         self.set_location(location_set)

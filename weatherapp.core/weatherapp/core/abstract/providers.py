@@ -137,7 +137,7 @@ class AccuProvider(WeatherProvider):
             locations_list[item.get_text()] = item.attrs['href']
 
         for item in locations_list: #print out locations
-            print(item)
+            self.app.stdout.write(f"{item}\n")
 
         choice = input(f"\nEnter {levels[level]} name:\n") #user input
 
@@ -313,7 +313,7 @@ class RP5_Provider(WeatherProvider):
                 locations_list[link.get_text()] = "http://rp5.ua" + url_decoded #sve to the table
 
             for item in locations_list: #print out locations
-                print(item)
+                self.app.stdout.write(f"{item}\n")
 
         if level == 1:
             links = table.find_all('a', class_='href12') #get all links
@@ -323,7 +323,7 @@ class RP5_Provider(WeatherProvider):
                 locations_list[item.attrs['title']] = "http://rp5.ua/" + url_decoded #sve to the table
 
             for item in locations_list: #print out locations
-                print(item)
+                self.app.stdout.write(f"{item}\n")
 
         if level == 2:
             links = table.find_all('a') #get all links
@@ -333,7 +333,7 @@ class RP5_Provider(WeatherProvider):
                 locations_list[item.get_text()] = "http://rp5.ua/" + url_decoded #sve to the table
 
             for item in locations_list: #print out locations
-                print(item)
+                self.app.stdout.write(f"{item}\n")
 
         choice = input(f"\nEnter {levels[level]} name:\n") #user input
 
@@ -368,7 +368,7 @@ class RP5_Provider(WeatherProvider):
         PAGE_SEARCH = urlopen(SEARCH_REQUEST).read()
         PAGE_SEARCH = str(PAGE_SEARCH, encoding = 'utf-8')
 
-        print(PAGE_SEARCH)
+        self.app.stdout.write(f"{PAGE_SEARCH}\n")
 
 class SinoptikProvider(WeatherProvider):
     """ Class for Sinoptik """
@@ -470,7 +470,7 @@ class SinoptikProvider(WeatherProvider):
                 locations_list[item.get_text()] = "https:" + url_decoded
 
             for item in locations_list: #print out locations
-                print(item)
+                self.app.stdout.write(f"{item}\n")
 
         if level == 1 or level == 2: #if country or region level
             soup = BeautifulSoup(raw_page, 'html.parser') #parse page
@@ -484,7 +484,7 @@ class SinoptikProvider(WeatherProvider):
                 locations_list[item.get_text()] = "https:" + url_decoded
 
             for item in locations_list: #print out locations
-                print(item)
+                self.app.stdout.write(f"{item}\n")
 
         if level == 3: #if city level
             soup = BeautifulSoup(raw_page, 'html.parser') #parse page
@@ -497,7 +497,7 @@ class SinoptikProvider(WeatherProvider):
                 locations_list[item.get_text()] = "https:" + url_decoded
 
             for item in locations_list: #print out locations
-                print(item)
+                self.app.stdout.write(f"{item}\n")
 
         choice = input(f"\nEnter {levels[level]} name:\n") #user input
 

@@ -10,11 +10,11 @@ class ConfigureApp(Command):
 
     def run(self):
         """ Run configuration proccess """
-        print('Set providers to show:')
+        self.app.stdout.write('Set providers to show:\n')
         providers_list = list(enumerate(self.app.providers.get_list()))
         for number, item in providers_list:
-            print(f"{number} - {item}")
-        print("Enter number of providers separately or S to skip")
+            self.app.stdout.write(f"{number} - {item}\n")
+        self.app.stdout.write("Enter number of providers separately or S to skip\n")
         try:
             choice = input('').split()
             #skip
@@ -38,7 +38,7 @@ class ConfigureApp(Command):
         except ValueError:
             pass
 
-        print('Do you want to set refresh time for all providers?')
+        self.app.stdout.write('Do you want to set refresh time for all providers?\n')
         reload_time = input('Type time in minutes or any non-number to skip\n')
 
         #if user enter non-number - quit
@@ -64,7 +64,7 @@ class Configure(Command):
         provider_title = ''
         set_loc = False
 
-        choice = input('Do you want set up location? Y/N')
+        choice = input('Do you want set up location? Y/N\n')
 
         if choice.lower() == 'y':
             set_loc = True
@@ -80,7 +80,7 @@ class Configure(Command):
                 not set_loc and self.set_options(provider_title)
                 set_loc and self.set_location(provider_title)
 
-        print('Bye-bye!')
+        self.app.stdout.write('Bye-bye!')
 
     def set_options(self, provider_title):
         """ sets options for provider """
