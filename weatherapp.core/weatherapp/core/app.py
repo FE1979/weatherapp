@@ -271,13 +271,13 @@ Provider - show specified provider.""",
                     f.write(write_line)
         pass
 
-    @staticmethod
-    def save_txt(ACTUAL_PRINTABLE_INFO, filename):
+    def save_txt(self, ACTUAL_PRINTABLE_INFO, filename):
         """ Saves to txt file printable weather info """
 
-        with open(filename+'.txt', 'w') as f:
-            for item in ACTUAL_PRINTABLE_INFO:
-                f.write(ACTUAL_PRINTABLE_INFO[item])
+        self.stdout = open(filename+'.txt', 'w')
+        for line in ACTUAL_PRINTABLE_INFO:
+            self.stdout.write(f"{ACTUAL_PRINTABLE_INFO[line]}\n")
+        self.stdout.close()
 
         pass
 
