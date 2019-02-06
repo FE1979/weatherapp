@@ -19,6 +19,9 @@ class App:
         self.providers = ProviderManager()
         self.commands = CommandManager().commands
         self.logger = self._get_logger(self.args.verbosity)
+        self.stdin = sys.stdin
+        self.stdout = sys.stdout
+        self.stderr = sys.stderr
 
     @staticmethod
     def _get_logger(verbose_lvl):
@@ -107,7 +110,7 @@ Provider - show specified provider.""",
 
         # check if config file is valid, exit if not
         if not config.is_valid():
-            print('Config files are broken. Delete them to reconfigure to defaults')
+            self.stdout.write('Config files are broken. Delete them to reconfigure to defaults')
             return
 
         if len(self.remaining_args) == 0: #get options if no CLI provider args
@@ -146,11 +149,11 @@ Provider - show specified provider.""",
                     config.ACTUAL_PRINTABLE_INFO[title] = self.nice_output(output_data,
                                                                         title)
         else:
-            print('No such command')
+            self.stdout.write('No such command')
 
         if self.args.csv:
             self.save_csv(config.ACTUAL_WEATHER_INFO, self.args.csv)
-            print(config.ACTUAL_WEATHER_INFO)
+
         if self.args.save:
             self.save_txt(config.ACTUAL_PRINTABLE_INFO, self.args.save)
 
@@ -164,7 +167,7 @@ Provider - show specified provider.""",
         Prints weather on a screen
         input data - list of two lists: headers and values
         """
-        print(self.nice_output(output_data, title))
+        self.stdout.write(self.nice_output(output_data, title))
 
     @staticmethod
     def nice_output(table_data, title):
@@ -288,9 +291,9 @@ Provider - show specified provider.""",
         if answer.lower() == 'y':
             for item in list(path.glob('*.*')):
                 item.unlink()
-            print('Files removed')
+            self.stdout.write('Files removed')
             path.rmdir()
-            print('Directory removed')
+            self.stdout.write('Directory removed')
         else:
             pass
 
