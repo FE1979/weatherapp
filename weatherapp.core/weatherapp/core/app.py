@@ -122,7 +122,7 @@ Provider - show specified provider.""",
             command_factory = self.commands.get(command)
             command_factory(self).run()
 
-        if command in self.providers.get_list():
+        elif command in self.providers.get_list():
             if get_options: #get options if no CLI provider args
                 self.remaining_args = self.get_option_args(command)
             provider = self.providers.get(command)
@@ -134,7 +134,7 @@ Provider - show specified provider.""",
             config.ACTUAL_PRINTABLE_INFO[title] = self.nice_output(output_data,
                                                                     title)
 
-        if not command:
+        elif not command: #run all providers if 'Show' option is set
             for item in config.PROVIDERS_CONF:
                 if get_options: #get options if no CLI provider args
                     self.remaining_args = self.get_option_args(item)
