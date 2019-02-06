@@ -215,6 +215,7 @@ def is_valid():
 
 CONFIG, WEATHER_PROVIDERS = initiate_config(CONFIG)
 PROVIDERS_CONF = initiate_providers_conf()
+print(PROVIDERS_CONF)
 
 if __name__ == "__main__":
     pass

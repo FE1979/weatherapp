@@ -1,7 +1,7 @@
 """ Application commands """
 
 from abstract.abstract import Command
-import config.config
+import config.config as config
 
 class ConfigureApp(Command):
     """ Configures application """
