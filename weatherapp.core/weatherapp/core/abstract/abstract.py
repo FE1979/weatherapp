@@ -280,7 +280,7 @@ class WeatherProvider(Command):
 class Formatter(abc.ABC):
     """ Class for different print-out of weather information """
 
-    def __init__():
+    def __init__(self):
         pass
 
     def print_out():

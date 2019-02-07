@@ -10,7 +10,7 @@ import config.decorators
 from config import config
 from managers.providermanager import ProviderManager
 from managers.commandmanager import CommandManager
-from managers.formatters import TableFormatter
+import managers.formatters as formatters
 
 class App:
 
@@ -22,7 +22,12 @@ class App:
         self.stdin = sys.stdin
         self.stdout = sys.stdout
         self.stderr = sys.stderr
-        self.formatter = TableFormatter()
+
+        #define the displaying way of weather data
+        if self.args.d == 'plain':
+            self.formatter = formatters.PlainText()
+        else:
+            self.formatter = formatters.TableFormatter()
 
     @staticmethod
     def _get_logger(verbose_lvl):
@@ -67,6 +72,8 @@ Configure - provider configuration.
 Provider - show specified provider.""",
             nargs="?")
 
+        parser.add_argument("-d", metavar="[display type]", help="""Define way of displaying results:
+type 'table' - as table, 'plain' - as plain text""", type=str)
         parser.add_argument("-csv", metavar="[filename]",
                             help="Export weather info to CSV formatted file",
                             type=str) #App command
@@ -98,12 +105,55 @@ Provider - show specified provider.""",
 
         return args
 
+    @staticmethod
+    def clear_cache():
+        """ Removes cache directory """
+
+        path = pathlib.Path(config.WEATHER_PROVIDERS['App']['Cache_path'])
+
+        answer = input('Do you really want to remove all cache files with directory? Y/N\n')
+        if answer.lower() == 'y':
+            for item in list(path.glob('*.*')):
+                item.unlink()
+            self.stdout.write('Files removed')
+            path.rmdir()
+            self.stdout.write('Directory removed')
+        else:
+            pass
+
+
+    @staticmethod
+    def save_csv(ACTUAL_WEATHER_INFO, filename):
+        """ Saves weather info into comma-separated file
+        with two columns: head, data
+        new entry separated by new line sign"""
+        write_line = '' #container for writing a line in file
+        with open(filename+'.csv', 'w') as f:
+            for item in ACTUAL_WEATHER_INFO:
+                write_line = item +', ,\n' #header for next provider
+                f.write(write_line)
+                for item_data in ACTUAL_WEATHER_INFO[item]:
+                    write_line = item_data + ',' + \
+                    str(ACTUAL_WEATHER_INFO[item][item_data]) + '\n' #row head and data
+                    f.write(write_line)
+        pass
+
+    def save_txt(self, ACTUAL_PRINTABLE_INFO, filename):
+        """ Saves to txt file printable weather info """
+
+        self.stdout = open(filename+'.txt', 'w')
+        for line in ACTUAL_PRINTABLE_INFO:
+            self.stdout.write(f"{ACTUAL_PRINTABLE_INFO[line]}\n")
+        self.stdout.close()
+
+        pass
+
     def produce_output(self, weather_info, title):
         """ Produces outputs to the screen and to config vars for file saving """
 
-        self.stdout.write(self.formatter.table_print_out(weather_info, title))
+        self.stdout.write(self.formatter.print_out(weather_info, title))
         config.ACTUAL_WEATHER_INFO[title] = weather_info
-        config.ACTUAL_PRINTABLE_INFO[title] = self.formatter.table_print_out(weather_info,
+        config.ACTUAL_PRINTABLE_INFO[title] = self.formatter.print_out(weather_info,
                                                                             title)
 
     #@decorators.show_loading
@@ -160,21 +210,6 @@ Provider - show specified provider.""",
         config.save_config(config.CONFIG)
         config.write_providers_conf()
 
-    @staticmethod
-    def clear_cache():
-        """ Removes cache directory """
-
-        path = pathlib.Path(config.WEATHER_PROVIDERS['App']['Cache_path'])
-
-        answer = input('Do you really want to remove all cache files with directory? Y/N\n')
-        if answer.lower() == 'y':
-            for item in list(path.glob('*.*')):
-                item.unlink()
-            self.stdout.write('Files removed')
-            path.rmdir()
-            self.stdout.write('Directory removed')
-        else:
-            pass
 
 if __name__ == "__main__":
     Ap = App()

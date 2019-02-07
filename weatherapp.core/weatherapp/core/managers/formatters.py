@@ -4,17 +4,11 @@ from abstract.abstract import Formatter
 
 class TableFormatter(Formatter):
 
-    def __init__(self):
-        self._nice_output = ""
-        self.table_weather = ""
-        self.file_weather = ""
-        self.plain_weather = ""
+    def print_out(self, weather_info, title):
+        """
+        Returns weather info for output as nice table
+        """
 
-    def table_print_out(self, weather_info, title):
-        """
-        Prints weather on a screen
-        input data - list of two lists: headers and values
-        """
         output_data = self._make_printable(weather_info)
 
         return self.nice_output(output_data, title)
@@ -105,33 +99,30 @@ class TableFormatter(Formatter):
         return output_data
 
 
-class FileOutput(Formatter):
+class PlainText(Formatter):
 
-    def __init__():
-        pass
+    headers_dict = {'Temperature': 'Температура',
+                    'RealFeel': 'Відчувається як',
+                    'Condition': 'На небі',
+                    'Max': 'Максимальна', 'Min': 'Мінімальна', 'Av': 'Середня',
+                    'Num': 'Прогноз на, годин',
+                    'Deg': f"{unescape('&deg')}C",
+                    'Next_day_temp': 'Максимальна вдень',
+                    'Next_day_temp_max': 'Максимальна вдень', #for RP5
+                    'Next_day_temp_min': 'Мінімальна вдень', #for RP5
+                    'Next_day_RF': 'Відчуватиметься вдень як',
+                    'Next_day_condition': 'На небі вдень буде',
+                    'Next_night_temp': 'Мінімальна вночі',
+                    'Next_night_RF': 'Відчуватиметься вночі як',
+                    'Next_night_condition': 'На небі вночі буде'}
 
-    @staticmethod
-    def save_csv(ACTUAL_WEATHER_INFO, filename):
-        """ Saves weather info into comma-separated file
-        with two columns: head, data
-        new entry separated by new line sign"""
-        write_line = '' #container for writing a line in file
-        with open(filename+'.csv', 'w') as f:
-            for item in ACTUAL_WEATHER_INFO:
-                write_line = item +', ,\n' #header for next provider
-                f.write(write_line)
-                for item_data in ACTUAL_WEATHER_INFO[item]:
-                    write_line = item_data + ',' + \
-                    str(ACTUAL_WEATHER_INFO[item][item_data]) + '\n' #row head and data
-                    f.write(write_line)
-        pass
 
-    def save_txt(self, ACTUAL_PRINTABLE_INFO, filename):
-        """ Saves to txt file printable weather info """
+    def print_out(self, weather_info, title):
+        """ Prints weather info as plain text """
 
-        self.stdout = open(filename+'.txt', 'w')
-        for line in ACTUAL_PRINTABLE_INFO:
-            self.stdout.write(f"{ACTUAL_PRINTABLE_INFO[line]}\n")
-        self.stdout.close()
+        output_data = "\n" + title + "\n"
 
-        pass
+        for item in weather_info:
+            output_data = f"{output_data}\n{self.headers_dict[item]}: {weather_info[item]}"
+
+        return output_data + "\n"
