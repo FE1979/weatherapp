@@ -2,6 +2,14 @@ from html import escape, unescape
 
 from abstract.abstract import Formatter
 
+def get_formatter(option):
+    """Returns formatter by given option"""
+
+    if option == 'table':
+        return TableFormatter()
+    elif option == 'plain':
+        return PlainText()
+
 class TableFormatter(Formatter):
 
     def print_out(self, weather_info, title):

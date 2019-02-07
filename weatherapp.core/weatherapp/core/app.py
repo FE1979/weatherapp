@@ -24,10 +24,10 @@ class App:
         self.stderr = sys.stderr
 
         #define the displaying way of weather data
-        if self.args.d == 'plain':
-            self.formatter = formatters.PlainText()
-        else:
-            self.formatter = formatters.TableFormatter()
+        if self.args.d:
+            self.formatter = formatters.get_formatter(self.args.d)
+        if self.formatter == None or not self.args.d: #if wrong display type or no argument entered read the config
+            self.formatter = formatters.get_formatter(config.WEATHER_PROVIDERS['App']['Display'])
 
     @staticmethod
     def _get_logger(verbose_lvl):

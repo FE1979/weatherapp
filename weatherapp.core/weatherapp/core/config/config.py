@@ -12,7 +12,8 @@ import config.decorators
 #WEATHER_PROVIDERS used as default values for first start or settings container
 WEATHER_PROVIDERS = {
 'App': {
-        'Cache_path': str(pathlib.Path.cwd() / 'Cache')
+        'Cache_path': str(pathlib.Path.cwd() / 'Cache'),
+        'Display': 'table'
         },
 'Accuweather': {'Title': 'Accuweather',
         'URL': "https://www.accuweather.com/uk/ua/kyiv/324505/weather-forecast/324505",
