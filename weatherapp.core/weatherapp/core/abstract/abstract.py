@@ -1,4 +1,9 @@
-""" Abstract classes for weatherapp project """
+""" Abstract classes for weatherapp project
+    Manager: class for managers
+    Command: command class
+    WeatherProvider: provider class, child of Command
+    Formatter: print-out class
+"""
 
 from urllib.request import urlopen, Request
 from urllib.parse import quote, unquote
@@ -271,3 +276,12 @@ class WeatherProvider(Command):
                 weather_info.update(self.get_hourly())
 
         return weather_info, title
+
+class Formatter(abc.ABC):
+    """ Class for different print-out of weather information """
+
+    def __init__():
+        pass
+
+    def print_out():
+        pass
