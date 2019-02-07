@@ -53,6 +53,12 @@ class ConfigureApp(Command):
                 if key == 'Caching_time':
                     config.WEATHER_PROVIDERS[item][key] = reload_time
 
+        display_option = input("Type '1' for displaying weather info as a table or '2' - as plain text?\n")
+        if display_option == '1':
+            config.WEATHER_PROVIDERS['App']['Display'] = 'table'
+        elif display_option == '2':
+            config.WEATHER_PROVIDERS['App']['Display'] = 'plain'
+
 class Configure(Command):
     """ Configures Provider """
 
