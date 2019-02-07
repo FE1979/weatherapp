@@ -44,14 +44,13 @@ class ConfigureApp(Command):
         #if user enter non-number - quit
         try:
             reload_time = int(reload_time)
+            #set refresh time for all providers
+            for item in config.WEATHER_PROVIDERS:
+                for key in config.WEATHER_PROVIDERS[item]:
+                    if key == 'Caching_time':
+                        config.WEATHER_PROVIDERS[item][key] = reload_time
         except ValueError:
             self.app.logger.info("Skip")
-            return
-        #set refresh time for all providers
-        for item in config.WEATHER_PROVIDERS:
-            for key in config.WEATHER_PROVIDERS[item]:
-                if key == 'Caching_time':
-                    config.WEATHER_PROVIDERS[item][key] = reload_time
 
         display_option = input("Type '1' for displaying weather info as a table or '2' - as plain text?\n")
         if display_option == '1':

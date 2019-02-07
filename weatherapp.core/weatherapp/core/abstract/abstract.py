@@ -9,6 +9,7 @@ from urllib.request import urlopen, Request
 from urllib.parse import quote, unquote
 from urllib import parse
 from bs4 import BeautifulSoup
+from html import escape, unescape
 
 import os
 import abc
@@ -278,10 +279,31 @@ class WeatherProvider(Command):
         return weather_info, title
 
 class Formatter(abc.ABC):
-    """ Class for different print-out of weather information """
+    """ Class for different print-out of weather information
 
-    def __init__(self):
-        pass
+        Attributes.
+        headers_dict: weather_info keys corresponds with output keys
+    """
 
+    headers_dict = {'Temperature': 'Температура',
+                    'RealFeel': 'Відчувається як',
+                    'Condition': 'На небі',
+                    'Max': 'Максимальна', 'Min': 'Мінімальна', 'Av': 'Середня',
+                    'Num': 'Прогноз на, годин',
+                    'Deg': f"{unescape('&deg')}C",
+                    'Next_day_temp': 'Максимальна вдень',
+                    'Next_day_temp_max': 'Максимальна вдень', #for RP5
+                    'Next_day_temp_min': 'Мінімальна вдень', #for RP5
+                    'Next_day_RF': 'Відчуватиметься вдень як',
+                    'Next_day_condition': 'На небі вдень буде',
+                    'Next_night_temp': 'Мінімальна вночі',
+                    'Next_night_RF': 'Відчуватиметься вночі як',
+                    'Next_night_condition': 'На небі вночі буде'}
+
+
+    @abc.abstractmethod
     def print_out():
+        """ Retuns printable information
+            Should be described
+        """
         pass

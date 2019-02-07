@@ -22,6 +22,7 @@ class App:
         self.stdin = sys.stdin
         self.stdout = sys.stdout
         self.stderr = sys.stderr
+        self.formatter = None
 
         #define the displaying way of weather data
         if self.args.d:
