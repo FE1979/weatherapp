@@ -178,7 +178,7 @@ type 'table' - as table, 'plain' - as plain text""", type=str)
 
         command = self.args.command
 
-        if command in self.commands.keys():
+        if command in self.commands:
             command_factory = self.commands.get(command)
             command_factory(self).run()
 

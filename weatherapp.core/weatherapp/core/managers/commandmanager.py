@@ -10,6 +10,10 @@ class CommandManager(abstract.abstract.Manager):
         self.commands = {}
         self._load_commands()
 
+    def __iter__(self):
+        for key, value in self.commands.items():
+            yield key, value
+
     def _load_commands(self):
         """ Loads commands from commands.py """
 
