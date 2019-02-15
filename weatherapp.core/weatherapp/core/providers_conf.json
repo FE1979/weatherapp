@@ -1,1 +1,1 @@
-{"Accuweather": {"Show": true, "Next_day": true, "Next_hours": true}, "RP5": {"Show": true, "Next_day": true, "Next_hours": true}, "Sinoptik": {"Show": true, "Next_day": true, "Next_hours": true}}
+{"Accuweather": {"Show": true, "Next_day": true, "Next_hours": true}, "RP5": {"Show": false, "Next_day": true, "Next_hours": false}, "Sinoptik": {"Show": false, "Next_day": false, "Next_hours": true}}
