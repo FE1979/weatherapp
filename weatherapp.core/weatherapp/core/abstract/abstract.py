@@ -115,7 +115,7 @@ class WeatherProvider(Command):
             console.setLevel(logging.WARNING)
 
         fmt = logging.Formatter(
-                            '%(asctime)s %(name)s %(levelname)s %(message)s')
+            '%(asctime)s %(name)s %(levelname)s %(message)s')
         console.setFormatter(fmt)
         logger.addHandler(console)
 
@@ -132,7 +132,7 @@ class WeatherProvider(Command):
         if not self.valid_cache(URL) or force_reload:
 
             HEAD = {'User-Agent':
-                'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:63.0) Gecko/201'}
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:63.0) Gecko/201'}
             INFO_REQUEST = Request(URL, headers=HEAD)
             PAGE = urlopen(INFO_REQUEST).read()
 
@@ -321,7 +321,7 @@ class WeatherProvider(Command):
 
         parser = argparse.ArgumentParser()
         parser.add_argument("-next", help="Next day forecast",
-                    action="store_true")  # Provider option
+                            action="store_true")  # Provider option
         group = parser.add_mutually_exclusive_group()
         group.add_argument("-f", "--forec",
                             help="Display forecast for next hours",
