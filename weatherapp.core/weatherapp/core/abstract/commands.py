@@ -19,7 +19,7 @@ class ConfigureApp(Command):
             choice = input('').split()
             #skip
 
-            if 's' or 'S' in choice:
+            if ('s' or 'S') in choice:
                 raise ValueError
 
             try:
@@ -31,10 +31,13 @@ class ConfigureApp(Command):
                 if number in choice:
                     config.PROVIDERS_CONF[providers_list[number][1]]['Show'] = True
                 #in case if number is wrong
+
+                elif number not in choice:
+                    config.PROVIDERS_CONF[providers_list[number][1]]['Show'] = False
+
                 elif number < max(choice):
                     continue
-                else:
-                    config.PROVIDERS_CONF[providers_list[number][1]]['Show'] = False
+
         except ValueError:
             pass
 
@@ -57,6 +60,8 @@ class ConfigureApp(Command):
             config.WEATHER_PROVIDERS['App']['Display'] = 'table'
         elif display_option == '2':
             config.WEATHER_PROVIDERS['App']['Display'] = 'plain'
+
+        print(config.PROVIDERS_CONF)
 
 class Configure(Command):
     """ Configures Provider """
