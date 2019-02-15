@@ -80,7 +80,7 @@ class WeatherProvider(Command):
 
         super().__init__(app)
 
-        self.initiate()  #set Provider vars from config
+        self.initiate()  # set Provider vars from config
 
     def initiate(self):
         """ Sets instance variables from config """
@@ -121,7 +121,7 @@ class WeatherProvider(Command):
 
         return logger
 
-    def get_raw_page(self, URL, force_reload = False):
+    def get_raw_page(self, URL, force_reload=False):
         """ Loads a page from given URL
             :param URL: web page address
             :param force_reload: load from web if True or from cache instead
@@ -133,7 +133,7 @@ class WeatherProvider(Command):
 
             HEAD = {'User-Agent':
                 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:63.0) Gecko/201'}
-            INFO_REQUEST = Request(URL, headers = HEAD)
+            INFO_REQUEST = Request(URL, headers=HEAD)
             PAGE = urlopen(INFO_REQUEST).read()
 
             self.save_cache(PAGE, URL)
@@ -141,7 +141,7 @@ class WeatherProvider(Command):
         else:
             PAGE = self.load_cache(URL)
 
-        PAGE = str(PAGE, encoding = 'utf-8')
+        PAGE = str(PAGE, encoding='utf-8')
 
         return PAGE
 
@@ -233,7 +233,7 @@ class WeatherProvider(Command):
         inst_variables = {}
 
         for item in self.__dict__:
-            if item in ['raw_page', 'app']: #exceptions
+            if item in ['raw_page', 'app']:  # exceptions
                 pass
             else:
                 inst_variables[item] = self.__getattribute__(item)
@@ -282,7 +282,7 @@ class WeatherProvider(Command):
         pass
 
     @abc.abstractmethod
-    def browse_location(self, level = 0, URL_location = None):
+    def browse_location(self, level=0, URL_location=None):
         """ Browse locations of weather provider
             :param level: location level. Increases from '0' - continents to
                                                                     '4' - city
@@ -321,16 +321,16 @@ class WeatherProvider(Command):
 
         parser = argparse.ArgumentParser()
         parser.add_argument("-next", help="Next day forecast",
-                    action="store_true")  #Provider option
+                    action="store_true")  # Provider option
         group = parser.add_mutually_exclusive_group()
         group.add_argument("-f", "--forec",
                             help="Display forecast for next hours",
-                            action="store_true")  #Provider option
+                            action="store_true")  # Provider option
         group.add_argument("-nf", "--noforec",
                             help="Do not display forecast for next hours",
-                            action='store_false')  #Provider option
+                            action='store_false')  # Provider option
         parser.add_argument("-refresh", help="Force reloading pages",
-                            action="store_true")  #Provider option
+                            action="store_true")  # Provider option
         self.args = parser.parse_args(self.app.remaining_args)
 
     def run(self):
@@ -361,6 +361,7 @@ class WeatherProvider(Command):
 
         return weather_info, title
 
+
 class Formatter(abc.ABC):
     """ Class for different print-out of weather information
         attributes:
@@ -374,14 +375,13 @@ class Formatter(abc.ABC):
                     'Num': 'Прогноз на, годин',
                     'Deg': f"{unescape('&deg')}C",
                     'Next_day_temp': 'Максимальна вдень',
-                    'Next_day_temp_max': 'Максимальна вдень', #for RP5
-                    'Next_day_temp_min': 'Мінімальна вдень', #for RP5
+                    'Next_day_temp_max': 'Максимальна вдень',  # for RP5
+                    'Next_day_temp_min': 'Мінімальна вдень',   # for RP5
                     'Next_day_RF': 'Відчуватиметься вдень як',
                     'Next_day_condition': 'На небі вдень буде',
                     'Next_night_temp': 'Мінімальна вночі',
                     'Next_night_RF': 'Відчуватиметься вночі як',
                     'Next_night_condition': 'На небі вночі буде'}
-
 
     @abc.abstractmethod
     def print_out():
