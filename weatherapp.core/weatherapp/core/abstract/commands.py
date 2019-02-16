@@ -42,11 +42,11 @@ class ConfigureApp(Command):
 
             for number, item in providers_list:
                 if number in choice:
-                    config.PROVIDERS_CONF[providers_list[number][1]]['Show'] =
+                    config.PROVIDERS_CONF[providers_list[number][1]]['Show'] = \
                     True
 
                 elif number not in choice:
-                    config.PROVIDERS_CONF[providers_list[number][1]]['Show'] =
+                    config.PROVIDERS_CONF[providers_list[number][1]]['Show'] = \
                     False
 
                 elif number < max(choice):  # in case if number is wrong
@@ -77,8 +77,6 @@ class ConfigureApp(Command):
             config.WEATHER_PROVIDERS['App']['Display'] = 'table'
         elif display_option == '2':
             config.WEATHER_PROVIDERS['App']['Display'] = 'plain'
-
-        print(config.PROVIDERS_CONF)
 
 
 class Configure(Command):

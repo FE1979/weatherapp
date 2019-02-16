@@ -39,15 +39,15 @@ class AccuProvider(WeatherProvider):
         soup = BeautifulSoup(self.raw_page, 'html.parser')
 
         # find block with current condition
-        current_cond_div =
+        current_cond_div = \
             soup.find('div', id='feed-tabs', class_='panel-list cityforecast')
         # get temperature and convert it to string type
-        weather_info['Temperature'] =
+        weather_info['Temperature'] = \
             str(current_cond_div.find('span', class_='large-temp').string)
         # remove grade sign, make it number
         weather_info['Temperature'] = int(weather_info['Temperature'][:-1])
         # get weather condition
-        weather_info['Condition'] =
+        weather_info['Condition'] = \
             str(current_cond_div.find('span', class_='cond').string)
         # get real feel temperature
         RealFeel = str(current_cond_div.find('span', class_='realfeel').string)
@@ -120,17 +120,17 @@ class AccuProvider(WeatherProvider):
         # remove word 'RealFeel' from it and grade sign. make it number
         weather_info['Next_day_RF'] = int(RealFeel[10:-1])
         # condition
-        weather_info['Next_day_condition'] =
+        weather_info['Next_day_condition'] = \
             str(next_day_forec.find('div', class_='cond').string)
         # remove spaces
-        weather_info['Next_day_condition'] =
+        weather_info['Next_day_condition'] = \
             re.sub(regex, '', weather_info['Next_day_condition'])
         # remove \r\n on the sides
-        weather_info['Next_day_condition'] =
+        weather_info['Next_day_condition'] = \
             weather_info['Next_day_condition'][2:-2]
 
         # scrap night info
-        Next_night_temp =
+        Next_night_temp = \
             night_forec.find('span', class_="large-temp").get_text()
         # remove grade sign and 'Мін' word
         weather_info['Next_night_temp'] = int(str(Next_night_temp[:-4]))
@@ -139,13 +139,13 @@ class AccuProvider(WeatherProvider):
         # remove word 'RealFeel' from it and grade sign. make it number
         weather_info['Next_night_RF'] = int(RealFeel[10:-1])
         # condition
-        weather_info['Next_night_condition'] =
+        weather_info['Next_night_condition'] = \
             str(night_forec.find('div', class_='cond').string)
         # remove spaces
-        weather_info['Next_night_condition'] =
+        weather_info['Next_night_condition'] = \
             re.sub(regex, '', weather_info['Next_night_condition'])
         # remove \r\n on the sides
-        weather_info['Next_night_condition'] =
+        weather_info['Next_night_condition'] = \
             weather_info['Next_night_condition'][2:-2]
 
         return weather_info
@@ -428,7 +428,7 @@ class RP5_Provider(WeatherProvider):
 
             for item in links:
                 url_decoded = quote(item.attrs['href'])
-                locations_list[item.attrs['title']] =
+                locations_list[item.attrs['title']] = \
                     "http://rp5.ua/" + url_decoded
 
             for item in locations_list:
@@ -440,7 +440,7 @@ class RP5_Provider(WeatherProvider):
 
             for item in links:
                 url_decoded = quote(item.attrs['href'])
-                locations_list[item.get_text()] =
+                locations_list[item.get_text()] = \
                     "http://rp5.ua/" + url_decoded
 
             for item in locations_list:
@@ -451,7 +451,7 @@ class RP5_Provider(WeatherProvider):
         # if not city level repeat recursively
         if level < 2:
             try:
-                location_set =
+                location_set = \
                     self.browse_location(level+1, locations_list[choice])
             except KeyError:
                 self.logger.error(
@@ -514,7 +514,7 @@ class SinoptikProvider(WeatherProvider):
         cond = str(cond[1]['alt'])
         weather_info['Condition'] = cond
 
-        curr_temp =
+        curr_temp = \
             str(curr_temp_cond.find('p', class_='today-temp').get_text())
         # remove Celsius sign and make it integer
         weather_info['Temperature'] = int(curr_temp[:-2])
@@ -662,7 +662,7 @@ class SinoptikProvider(WeatherProvider):
         if level != 3:
 
             try:
-                location_set =
+                location_set = \
                     self.browse_location(level+1, locations_list[choice])
             except KeyError:
                 self.logger.error(
