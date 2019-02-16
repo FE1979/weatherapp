@@ -12,6 +12,7 @@ from managers.providermanager import ProviderManager
 from managers.commandmanager import CommandManager
 import managers.formatters as formatters
 
+
 class App:
 
     def __init__(self):
@@ -24,15 +25,21 @@ class App:
         self.stderr = sys.stderr
         self.formatter = None
 
-        #define the displaying way of weather data
+        # define the displaying way of weather data
         if self.args.d:
             self.formatter = formatters.get_formatter(self.args.d)
-        if self.formatter == None or not self.args.d: #if wrong display type or no argument entered read the config
-            self.formatter = formatters.get_formatter(config.WEATHER_PROVIDERS['App']['Display'])
+        # if wrong display type or no cli argument get display type from config
+        if self.formatter is None or not self.args.d:
+            self.formatter = formatters.get_formatter(
+                config.WEATHER_PROVIDERS['App']['Display'])
 
     @staticmethod
     def _get_logger(verbose_lvl):
-        """ Gets looger forr application """
+        """ Gets looger for application
+            :param verbose_lvl: verbosity level
+            :return: logger instance
+            :rtype: logger
+        """
 
         logger = logging.getLogger('app')
         console = logging.StreamHandler()
@@ -47,45 +54,54 @@ class App:
             logger.setLevel(logging.WARNING)
             console.setLevel(logging.WARNING)
 
-        fmt = logging.Formatter('%(asctime)s %(name)s %(levelname)s %(message)s')
+        fmt = logging.Formatter(
+            '%(asctime)s %(name)s %(levelname)s %(message)s')
         console.setFormatter(fmt)
         logger.addHandler(console)
 
         return logger
 
     def take_args(self):
-        """
-        Set, parse and manage CLI arguments
+        """ Set, parse and manage CLI arguments
+            :return: parsed CLI arguments for App and arguments for Provider
+            :rtype: tuple
         """
 
         parser = argparse.ArgumentParser(prog="Weatherapp", epilog="Get fun!",
-            formatter_class = argparse.RawTextHelpFormatter,
-            description="""A program shows you current weather condition and, optionaly, temperature forecast.\n
-            Provider options:
-            -f, --forec: displays forecast for next hours
-            -nf, --noforec: do not display forecast for next hours
-            -refresh: force reloading pages""",
-            usage="""app command / provider -forecast -csv/-save [file_name]""")
+            formatter_class=argparse.RawTextHelpFormatter,
+            description="""A program shows you current weather condition """ +
+            """and, optionaly, temperature forecast.\n
+            \tProvider options:
+            \t\t-f, --forec: displays forecast for next hours
+            \t\t-nf, --noforec: do not display forecast for next hours
+            \t\t-refresh: force reloading pages""",
+            usage="app command / provider -forecast -csv/-save [file_name]")
 
         parser.add_argument("command",
-            help="""ConfigureApp - aplication configuration.
-Configure - provider configuration.
-Provider - show specified provider.""",
+            help="""ConfigureApp - aplication configuration.\n""" +
+                """Configure - provider configuration.\n""" +
+                """Provider - show specified provider.""",
             nargs="?")
 
-        parser.add_argument("-d", metavar="[display type]", help="""Define way of displaying results:
-type 'table' - as table, 'plain' - as plain text""", type=str)
+        parser.add_argument("-d", metavar="[display type]",
+                            help="""Define way of displaying results:\n""" +
+                            """type 'table' - as table,""" +
+                            """ 'plain' - as plain text""",
+                            type=str)
         parser.add_argument("-csv", metavar="[filename]",
                             help="Export weather info to CSV formatted file",
-                            type=str) #App command
+                            type=str)  # App command
         parser.add_argument("-save", metavar="[filename]",
                             help="Saves printed out info into txt file",
-                            type=str) #App command
-        parser.add_argument("--clear-cache", help="Remove cache files and directory",
-                            action="store_true") #App command
+                            type=str)  # App command
+        parser.add_argument("--clear-cache",
+                            help="Remove cache files and directory",
+                            action="store_true")  # App command
         parser.add_argument("--debug", help="Show error tracebacks",
                             action="store_true")
-        parser.add_argument("-v", "--verbosity", help="Debug level, -v - INFO, -vv - DEBUG, -vvv - WARNING",
+        parser.add_argument("-v", "--verbosity",
+                            help="Debug level," +
+                            " -v - INFO, -vv - DEBUG, -vvv - WARNING",
                             action="count")
 
         args, remaining_args = parser.parse_known_args()
@@ -95,12 +111,17 @@ type 'table' - as table, 'plain' - as plain text""", type=str)
     def get_option_args(self, provider_title):
         """ Loads show options from providers config
             if no options defined by user
+            :param provider_title: Provider title
+            :return: show options for Provider
+            :rtype: list
         """
+
         args = []
-        options = config.PROVIDERS_CONF[provider_title] #get options for provider
+        # get options for provider
+        options = config.PROVIDERS_CONF[provider_title]
         for item in options:
-            if item == 'Next_day' and options[item]: #if Next_day == True
-                args.append('-next') #set CLI argument
+            if item == 'Next_day' and options[item]:  # if Next_day == True
+                args.append('-next')  # set CLI argument
             elif item == 'Next_hours' and options[item]:
                 args.append('-f')
 
@@ -112,7 +133,9 @@ type 'table' - as table, 'plain' - as plain text""", type=str)
 
         path = pathlib.Path(config.WEATHER_PROVIDERS['App']['Cache_path'])
 
-        answer = input('Do you really want to remove all cache files with directory? Y/N\n')
+        answer = input(
+                'Do you really want to remove ' +
+                'all cache files with directory? Y/N\n')
         if answer.lower() == 'y':
             for item in list(path.glob('*.*')):
                 item.unlink()
@@ -122,25 +145,34 @@ type 'table' - as table, 'plain' - as plain text""", type=str)
         else:
             pass
 
-
     @staticmethod
     def save_csv(ACTUAL_WEATHER_INFO, filename):
         """ Saves weather info into comma-separated file
-        with two columns: head, data
-        new entry separated by new line sign"""
-        write_line = '' #container for writing a line in file
+            File string formatt:
+                head:  # data key
+                data:  # data
+
+            :param ACTUAL_WEATHER_INFO: parsed weather info
+            :param filename: file name
+        """
+
+        write_line = ''  # container for writing a line in file
         with open(filename+'.csv', 'w') as f:
             for item in ACTUAL_WEATHER_INFO:
-                write_line = item +', ,\n' #header for next provider
+                write_line = item + ', ,\n'  # header for next provider
                 f.write(write_line)
                 for item_data in ACTUAL_WEATHER_INFO[item]:
+                    # row head and data
                     write_line = item_data + ',' + \
-                    str(ACTUAL_WEATHER_INFO[item][item_data]) + '\n' #row head and data
+                        str(ACTUAL_WEATHER_INFO[item][item_data]) + '\n'
                     f.write(write_line)
         pass
 
     def save_txt(self, ACTUAL_PRINTABLE_INFO, filename):
-        """ Saves to txt file printable weather info """
+        """ Saves to txt file printable weather info
+            :param ACTUAL_PRINTABLE_INFO: weather info prepared for print out
+            :param filename: file name
+        """
 
         self.stdout = open(filename+'.txt', 'w')
         for line in ACTUAL_PRINTABLE_INFO:
@@ -150,30 +182,38 @@ type 'table' - as table, 'plain' - as plain text""", type=str)
         pass
 
     def produce_output(self, weather_info, title):
-        """ Produces outputs to the screen and to config vars for file saving """
+        """ Produces outputs to the screen
+            and to config vars for file saving
+            :param weather_info: weather information
+            :param title: weather information title
+        """
 
         self.stdout.write(self.formatter.print_out(weather_info, title))
         config.ACTUAL_WEATHER_INFO[title] = weather_info
-        config.ACTUAL_PRINTABLE_INFO[title] = self.formatter.print_out(weather_info,
-                                                                            title)
+        config.ACTUAL_PRINTABLE_INFO[title] = \
+            self.formatter.print_out(weather_info, title)
 
-    #@decorators.show_loading
+    # @decorators.show_loading
     def main(self):
+        """ Runs application """
+
         weather_info = {}
         title = ''
         get_options = False
 
-        #clear cache first and exit. If no such option - continue
+        # clear cache first and exit. If no such option - continue
         if self.args.clear_cache:
             self.clear_cache()
             return None
 
         # check if config file is valid, exit if not
         if not config.is_valid():
-            self.stdout.write('Config files are broken. Delete them to reconfigure to defaults')
+            self.stdout.write('Config files are broken. ' +
+                                'Delete them to reconfigure to defaults')
             return
 
-        if len(self.remaining_args) == 0: #get options if no CLI provider args
+        # get options if no CLI provider args
+        if len(self.remaining_args) == 0:
             get_options = True
 
         command = self.args.command
@@ -183,18 +223,18 @@ type 'table' - as table, 'plain' - as plain text""", type=str)
             command_factory(self).run()
 
         elif command in self.providers.get_list():
-            if get_options: #get options if no CLI provider args
+            if get_options:  # get options if no CLI provider args
                 self.remaining_args = self.get_option_args(command)
             provider = self.providers.get(command)
             weather_info, title = provider(self).run()
             self.produce_output(weather_info, title)
 
-        elif not command: #run all providers if 'Show' option is set
+        elif not command:  # run all providers if 'Show' option is set
             for item in config.PROVIDERS_CONF:
-                if get_options: #get options if no CLI provider args
+                if get_options:  # get options if no CLI provider args
                     self.remaining_args = self.get_option_args(item)
 
-                if config.PROVIDERS_CONF[item]['Show'] == True:
+                if config.PROVIDERS_CONF[item]['Show'] is True:
                     provider = self.providers.get(item)
                     weather_info, title = provider(self).run()
                     self.produce_output(weather_info, title)
