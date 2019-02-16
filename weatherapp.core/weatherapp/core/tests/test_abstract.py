@@ -1,7 +1,12 @@
+import sys
+
 import unittest
 
 from abstract.abstract import WeatherProvider, Formatter
 from app import App
+
+sys.path.insert(0, '..')
+
 
 class TestProvider(WeatherProvider):
     """ Test provider """
@@ -11,23 +16,23 @@ class TestProvider(WeatherProvider):
     args = ""
 
     def get_info(self):
-        """ described abstract function
-        """
+        """ Described abstract function """
+
         return {"Info": "Parsed"}
 
     def get_hourly(self):
-        """ described abstract function
-        """
+        """ Described abstract function """
+
         return {"Info": "Parsed hourly"}
 
     def get_next_day(self):
-        """ described abstract function
-        """
+        """ Described abstract function """
+
         return {"Info": "Parsed next day"}
 
-    def browse_location(self, level = 0, URL_location = None):
-        """ described abstract function
-        """
+    def browse_location(self, level=0, URL_location=None):
+        """ Described abstract function """
+
         pass
 
     def set_location(self, location_set):
@@ -66,28 +71,28 @@ class TestWeatherProvider(unittest.TestCase):
         title = self.test_provider.title
         city = self.test_provider.Location
 
-        cli_args = ['-next', '-f'] # set cli args for test provider
+        cli_args = ['-next', '-f']  # set cli args for test provider
 
-        for cli_arg in cli_args: # run each command to test
+        for cli_arg in cli_args:  # run each command to test
             self.test_provider.app.remaining_args.append(cli_arg)
             self.test_provider.get_cli_args()
             refresh = self.test_provider.args.refresh
 
             if self.test_provider.args.next:
                 self.raw_page = self.test_provider.get_raw_page(
-                                        self.test_provider.URL_next_day, refresh)
+                                    self.test_provider.URL_next_day, refresh)
                 info_next_day = self.test_provider.get_next_day()
                 weather_info.update(info_next_day)
                 title = title + ", прогноз на завтра, " + city
 
             if not self.test_provider.args.next:
                 self.raw_page = self.test_provider.get_raw_page(
-                                        self.test_provider.URL, refresh)
+                                    self.test_provider.URL, refresh)
                 weather_info.update(self.test_provider.get_info())
                 title = title + ", поточна погода, " + city
                 if self.test_provider.args.forec:
                     self.raw_page = self.test_provider.get_raw_page(
-                                        self.test_provider.URL_hourly, refresh)
+                                    self.test_provider.URL_hourly, refresh)
                     weather_info.update(self.test_provider.get_hourly())
 
             if self.test_provider.app.remaining_args.pop() == '-next':
@@ -103,7 +108,9 @@ class TestFormatter(unittest.TestCase):
         self.formatter = ABC_Formatter()
 
     def test_print_out(self):
-        self.assertEqual(self.formatter.headers_dict, self.formatter.print_out())
+        self.assertEqual(
+            self.formatter.headers_dict, self.formatter.print_out()
+            )
 
 
 if __name__ == "__main__":
