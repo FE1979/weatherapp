@@ -71,10 +71,11 @@ class App:
             formatter_class=argparse.RawTextHelpFormatter,
             description="""A program shows you current weather condition """ +
             """and, optionaly, temperature forecast.\n
-            \tProvider options:
-            \t\t-f, --forec: displays forecast for next hours
-            \t\t-nf, --noforec: do not display forecast for next hours
-            \t\t-refresh: force reloading pages""",
+Provider options:
+            \t     -f, --forec:    displays forecast for next hours
+            \t     -nf, --noforec: do not display forecast for next hours
+            \t     -next:          show next day forecasst
+            \t     -refresh:       force reloading pages""",
             usage="app command / provider -forecast -csv/-save [file_name]")
 
         parser.add_argument("command",
