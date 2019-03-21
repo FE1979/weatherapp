@@ -94,10 +94,12 @@ class AccuProvider(WeatherProvider):
         """ Extracts weather info for next day
             Returns info in dictionary:
             weather_info = {
-                'Max': # maximum temperature forecast
-                'Min': # minimum temperature forecast
-                'Av':  # average temperature forecast
-                'Num': # forecast horizon in hours
+                'Next_day_temp':         # day temperature forecast
+                'Next_day_RF':           # day real feel temperature forecast
+                'Next_day_condition':    # day condition forecast
+                'Next_night_temp':       # night temperature forecast
+                'Next_night_RF':         # night real feel temperature forecast
+                'Next_night_condition':  # night condition forecast
                 }
         """
 
