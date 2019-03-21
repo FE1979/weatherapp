@@ -355,9 +355,9 @@ class RP5_Provider(WeatherProvider):
     def get_next_day(self):
         """ Extracts weather info for next day using RegEx
             weather_info = {
-                'Temperature': # temperature
-                'Condition':   # weather condition
-                'RealFeel':    # real feel temperature
+                'Next_day_temp_max':  # maximum temperature
+                'Next_day_temp_min':  # minimum temperature 
+                'Next_day_condition': # weather condition for next day
                 }
         """
         weather_info = {}
