@@ -46,5 +46,20 @@ class TestTableFormatter(unittest.TestCase):
         self.assertIsInstance(output_data, list)
 
 
+class TestPlainText(unittest.TestCase):
+
+    def setUp(self):
+        self.text = PlainText()
+        self.test_weather_info = {"Condition": "Clear and sunny",
+                                    "Temperature": 14}
+
+    def test_print_out(self):
+        """ test print_out """
+
+        output_text = self.text.print_out(self.test_weather_info, 'Title')
+
+        self.assertIsInstance(output_text, str)
+
+
 if __name__ == "__main__":
     unittest.main()
