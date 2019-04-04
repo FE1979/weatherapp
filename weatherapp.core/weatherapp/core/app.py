@@ -87,7 +87,8 @@ Provider options:
         parser.add_argument("-d", metavar="[display type]",
                             help="""Define way of displaying results:\n""" +
                             """type 'table' - as table,""" +
-                            """ 'plain' - as plain text""",
+                            """ 'plain' - as plain text""" +
+                            """ 'csv' - comma separated.""",
                             type=str)
         parser.add_argument("-csv", metavar="[filename]",
                             help="Export weather info to CSV formatted file",

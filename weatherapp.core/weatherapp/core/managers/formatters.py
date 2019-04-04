@@ -17,6 +17,8 @@ def get_formatter(option):
         return TableFormatter()
     elif option == 'plain':
         return PlainText()
+    elif option == 'csv':
+        return CSV_Formatter()
 
 
 class TableFormatter(Formatter):
@@ -139,5 +141,25 @@ class PlainText(Formatter):
         for item in weather_info:
             output_data = f"{output_data}\n" + \
                 f"{self.headers_dict[item]}: {weather_info[item]}"
+
+        return output_data + "\n"
+
+
+class CSV_Formatter(Formatter):
+    """ Comma separated output """
+
+    def print_out(self, weather_info, title):
+        """ Prints comma separated weather info
+            :param weather_info: weather_info given by provider
+            :param title: title of an output
+            :return: ordered weather info
+            :rtype: string
+        """
+
+        output_data = "\n" + title + "\n"
+
+        for item in weather_info:
+            output_data = f"{output_data}\n" + \
+                f"{self.headers_dict[item]}, {weather_info[item]}"
 
         return output_data + "\n"
